@@ -1,0 +1,340 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: Voice Verify API
+  description: 'This spec contains details about the TeleSign Voice Verify API. The TeleSign Voice Verify API allows you to send patented phone-based verification and two-factor authentication using a time-based, one-time passcode sent over voice message. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+
+  '/verify/call':
+    post:
+      summary: |
+        Send a verification message using a predefined voice template in the language of your choice, or send a custom text-to-speech verification message via voice. 
+      description: |-
+        An API that delivers patented phone-based verification and two-factor authentication (2FA) using a one-time passcode (OTP) sent over voice message in the event the end-user chooses the voice method, provides a landline or is not authorized to receive SMS messages in a specific country. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would. 
+
+        All requests submitted for the Voice Verify API: 
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use `https://rest-ww.telesign.com/v1/verify/call` as the base endpoint
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** - application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: phone_number
+          required: true
+          type: string
+          description: |
+            The end user's phone number, as a string of digits without spaces or punctuation, beginning with the country dialing code (for example, "1" for North America).
+        - in: formData
+          name: ucid
+          type: string
+          description: |
+            A string specifying a use case code. Choices include -
+            * ATCK - for use in a 2FA situation like updating an account or logging in
+            * BACF - for creating an account where the service may be vulnerable to bulk attacks and fraudsters
+            * BACS - for creating an account where the service may be vulnerable to bulk attacks or individual spammers
+            * CHBK - for use when someone is trying to buy something expensive or unusual and you want to verify it is really them
+            * CLDR - calendar event
+            * LEAD - for use in a situation where you require a person to enter personal information in order to obtain information about something like a loan or realty or school, and you want to check if the person is bogus or not
+            * OTHR - if you have a situation not addressed by other tags
+            * PWRT - for use in a situation where a password reset is required
+            * RESV - for use when you have end users making reservations and not showing up, and you want to be able to include phone verification in the loop
+            * RXPF - for use when you are trying to prevent prescription fraud
+            * SHIP - for use when you are sending a shipping notification
+            * THEF - for use when you are trying to prevent an end user from deactivating or redirecting a phone number in order to take over someone else's identity
+            * TRVF - for use when you are transferring money and you want to check to see if it is approved by sending a text message or phone call to your end user. This is similar to CHBK, but is specifically for a money transaction
+            * UNKN - if you have a situation not addressed by other tags (same as OTHR)
+        - in: formData
+          name: originating_ip
+          type: string
+          description: |
+            Your end user's IP address (do not send your own IP address). IPv4 and IPv6 are supported. For IPv4, the value must be in the format defined by the Internet Engineering Task Force (IETF) in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc791">Internet Protocol</a>. For IPv6, the value must be in the format defined by the IETF in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc4291#section-2.2">IP Version 6 Addressing Architecture</a>.
+        - in: formData
+          name: call_forward_action
+          type: string
+          description: |
+            Specifies the action that you want TeleSign to perform if the phone number has Call Forwarding enabled. Valid values include block and flag. 
+            * Block - If set to block, TeleSign services abort the verification process immediately, and return the call status code 130 - Call Blocked by TeleSign.
+            * Flag - If set to flag, then TeleSign continues the verification process as usual. This also returns an indicator identifying the phone number as having Call Forwarding enabled, giving you the option of processing the phone number.
+
+            [Default] TeleSign processes the verification request by performing a Call Forwarding detection check.
+        - in: formData
+          name: language
+          type: string
+          description: |
+            The IETF language tag used in applying predefined templates. For a complete list of language tags, see the section Supported Languages for Messages on the Codes, Languages, and Time Zones (REST) page.
+        - in: formData
+          name: verify_code
+          type: string
+          description: |
+            The verification code used for the code challenge. This is a randomly-generated numeric value. By default, TeleSign automatically generates a five-digit value for you. If you prefer to use your own verification code, you can override the default behavior by including this parameter and giving it a numeric value between 100 and 99999. By default, you do not include this code and TeleSign provides the code for you. 
+        - in: formData
+          name: prompt_message
+          type: string
+          description: 'This message is to be used in conjunction with `prompt_digit`. You provide a message to play, it is converted to text-to-speech and sent in a call and played for the end user. You are limited to 2000 code points. The message should contain the digit you want to press. For example, you might have the message - Press 7 to continue. Make sure the digit in your message matches the digit you send for `prompt_digit`. If the end user presses the correct digit, then the message you have for the `message` parameter plays. If the end user does not press the correct digit, the follow up message does not play, they hear the regular message repeated again. This can happen up to three times. If an end user presses incorrect digits on the third play through, the call hangs up. If the end user does not press any digits in the allotted time, the message repeats. If the end user does not press any digits a second time in a row, the call hangs up. All messages use the same `voice` tag if you choose to include one. NOTE: Do not use this feature with the language tag option.'
+        - in: formData
+          name: prompt_digit
+          type: string
+          description: 'This digit is to be used in conjunction with `prompt_message`. Provide a single digit 0-9 that you want the end user to press. After playing the prompt message, the system will wait and give the end user two chances to press the correct digit. If they do, the message in the `message` parameter plays. All messages use the same `voice` tag if you choose to include one.'
+        - in: formData
+          name: caller_id
+          type: string
+          description: |
+            This parameter allows you to set a phone number as caller ID for a Voice API message sent to your end users. In order to use a specific caller ID, you must purchase a phone number from TeleSign. This can be done by contacting your Technical Account Manager and asking to buy one or more numbers. Be aware that 100% preservation of a caller ID value is not guaranteed. TeleSign or a terminating operator may override the caller ID value that your end user will receive in order to improve delivery quality or follow local Telecom regulations in particular countries. Learn how to buy a number to use as caller id in the Buy a Phone Number (Caller ID) section of this page.
+        - in: formData
+          name: tts_message
+          type: string
+          description: |
+            Allows you to pass a text-to-speech (TTS) message. By default, TeleSign sends a scripted message to the phone. Messages default to en-US, unless otherwise stated by the language parameter. The default message is "Hello. Thank you for using our phone verification system. Your code is [code]. Once again, your code is [code]. Goodbye." To generate a TeleSign assigned validation code (this is recommended), include $$CODE$$ in the message string. This generates a random string with the appropriate length as part of the TTS message.For a list of languages, see the section Supported Languages for Messages on the Codes, Languages, and Time Zones (REST) page. For tips relating to creating TTS messages, see Text-to-Speech (TTS) Hints below.
+        - in: formData
+          name: pressx
+          type: string
+          description: 'PressX is a feature that allows you to send an end user a message that asks them to press a digit in order to hear their verification code. The message is in English, and as follows: Hello. Thank you for using the phone verification system. Please press *digit* to hear your code. The *digit* is randomly selected by TeleSign, and the end user gets two tries to get the correct digit. If the end user presses the correct digit, they will receive a message containing their verification code. Please note that this feature is only available in English, so you cannot use a language tag for other languages with it. To use this feature, you would put `pressx=1` in the body of your request. You cannot use this feature with TTS.'
+        - in: formData
+          name: extension_type
+          type: string
+          description: |
+            It is not an issue when a user’s phone number belongs to a modern Private Branch Exchange (PBX) because outside numbers are usually assigned to individual extensions. Older PBX systems on the other hand, require extra call processing because incoming calls require either a live switchboard operator or an automated attendant to request the number of the user’s extension before completing the call. By default, TeleSign does not support older PBX systems, but you can enable support for either live or automated switchboard scenarios by including the extension_type parameter. When you use this parameter, you must also use extension_template.
+        - in: formData
+          name: extension_template
+          type: string
+          description: |
+            A numerical string that specifies the extension used in the call, as described above. If the user must be reached at an extension, then use this parameter to specify the extension number. The extension string is composed of digits. You may use a maximum of 28 characters to specify your extension. For the extension_type=1 (DTMF digits are dialed), you can include commas in the extension number string, where each comma represents a one second pause in the dialing sequence.
+        - in: formData
+          name: redial
+          type: string
+          description: |
+            A Boolean value that specifies whether the TeleSign system redials when the call fails. If this parameter is set to false, then the TeleSign system does not reattempt calling the phone number when the first call attempt fails.
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.          
+
+            | Status Code | Associated Text String | Description                                           |
+            |-------------|------------------------|-------------------------------------------------------|
+            | 100         | Call answered          | The call was answered.                                |
+            | 101         | Not answered           | The call was not answered.                            |
+            | 103         | Call in progress       | TeleSign is either making the call or playing the voice message.                                        |
+            | 105         | Call not handled yet   | The verification call has not yet been attempted.     |
+            | 106         | Call failed            | An error occurred. No further attempt to call will be made.                                                 |
+            | 107         | Line busy              | The line is busy.                                     |
+            | 108         | Call canceled by TeleSign      | Call canceled by TeleSign.              |
+            | 129         | Call blocked by your request  | TeleSign blocked the call before it was placed. This is due to your prior submitted request to blocklist this phone number.                                    |
+            | 130         | Call blocked by TeleSign       | TeleSign blocked the phone call. This can happen if the message contains inappropriate material, or if TeleSign believes the client is abusing the service.  |
+            | 500         | Transaction not        | No Call, SMS, or PhoneID request was attempted.       |
+            | 501         | Not authorized         | No permissions for this resource, or authorization failed.                                               |
+            | 599         | Status not available   | The system is unable to provide status at this time.  |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceVerifyResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -10001     | Not Allowed Host (indicates that the IP address you are connecting from is not authorized to access the service)                 |
+            | -40006     | Bad Request              |
+            | -40007     | No Data Submitted        |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceVerifyResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -10009     | Invalid source IP address|
+            | -20002     | This product is not enabled for this Customer ID.                      |
+            | -20003     | This feature is not enabled for this Customer ID.                      |
+            | -30000     | Invalid Customer ID.     |
+            | -30001     | Customer ID Account Suspended.               |
+            | -30002     | Customer ID Account Not Activated.               |
+            | -30003     | Customer ID new account limit reached.           |
+            | -40002     | Not Authorized           |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceVerifyResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -10001     | CustomerID/ReferenceID not found (returned when the reference ID given does not exist)          |
+            | -10004     | Reference ID expired     |
+            | -40004     | Resource Not Found       |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceVerifyResponse'
+        '405':
+          description: |
+            The request method is known by the server but has been disabled and cannot be used.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -40005     | Method Not Allowed       |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceVerifyResponse'
+        '429':
+          description: |
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -40008     | {product} exceeded transaction hard cap. Request denied.          |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceVerifyResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -90001     | System Unavailable, please try again later.  |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceVerifyResponse'
+definitions:
+
+
+  postVoiceVerifyResponse:
+    type: object
+    description: |
+      This response assumes you have all features enabled. If you do not have some of these features in abled, they will not appear in your response.
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value that identifies your web service request. This value is unique for each web service request, is randomly-generated by TeleSign, and is returned in the response message immediately following your initial POST request.
+      sub_resource:
+        type: string
+        description: |
+          The subresource to access; it is set to call.
+      errors:
+        type: object
+        description: |
+          A JSON object that contains information on error conditions that might have resulted from the request, in an array of property-value pairs. If multiple errors occur, a pair is returned for each error.
+        properties:
+          code:
+            type: string
+            description: |
+              A 1 to 5-digit error code (possibly negative) that indicates the type of error that occurred. You can see a complete list of negative error codes on the All Status and Error Codes page.
+          description:
+            type: string
+            description: A string that describes the type of error that occurred.
+      status:
+        type: object
+        description: |
+          An object that indicates the current state/progress of the web service call. This status pertains to the technical aspects of delivering the verification code to your end users via a phone call. For example, The call was not answered. This object contains the following keys -
+        properties:
+          code:
+            type: string
+            description: A three digit numeric code that corresponds to the current state of the web service call. See the section Call Status Codes below for the complete listing.
+          description:
+            type: string
+            description: The text version of the call status code.
+          updated_on:
+            type: string
+            description: An ISO 8601 UTC timestamp indicating when the status was updated.
+      verify:
+        type: object
+        description: An object that indicates the verification result. This object contains the following key-
+        properties:
+          code_state:
+            type: string
+            description: |
+              A string value that indicates the verification result. VALID, INVALID, and UNKNOWN. When the verification is still in progress, code_state is UNKNOWN.
+      voice:
+        type: object
+        description: An object that contains the following -
+        properties:
+          caller_id:
+            type: string
+            description: |
+              This shows you the caller ID that was used to send your message. When possible, this caller ID will match the one you selected (if you enable that feature and choose to use it). Sometimes, the caller ID will still be different, and you will be able to see that here.
+      call_fowarding:
+        type: object
+        description: |
+          Specifies the action that you want TeleSign to perform if the phone number has Call Forwarding enabled. This object contains the following keys - 
+        properties:
+          action:
+            type: string
+            description: A string value that indicates the action taken if the phone number was found to have Call Forwarding enabled. Possible values are FLAG and BLOCK.
+          call_forward:
+            type: string
+            description: |
+              A string value that indicates whether the phone number has Call Forwarding enabled. Possible values are FORWARDED, NOT_FORWARDED, UNSUPPORTED, and UNAVAILABLE (if the Call Forwarding status could not be determined).
+      numbering:
+        type: object
+        description: |
+          Appears when you enable Score. An object containing details about the numbering attributes of the specified phone number. 
+        properties:
+          original:
+            type: object
+            description: |
+              An object containing details about the original phone number passed to TeleSign's PhoneID API. 
+            properties:
+              phone_number:
+                type: string
+                description: |
+                  The base phone number. This is the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              country_code:
+                type: string
+                description: |
+                  A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for the United Kingdom is 44.
+              max_length:
+                type: string
+                description: |
+                  The maximum number of digits allowed for phone numbers with this particular country dialing code.
+              min_length:
+                type: string
+                description: |
+                  The minimum number of digits allowed for phone numbers with this particular country dialing code.
+      phone_type:
+        type: object
+        description: Appears when you enable Score.
+        properties:
+          code:
+            type: string
+            description: 'One of the [phone type codes](https://enterprise.telesign.com/api-reference/codes-languages-and-time-zones/shared#phone-type-codes)'
+          description:
+            type: string
+            description: Text describing the phone type.
+      risk:
+        type: object
+        description: |
+          Appears when you enable Score. An object that describes the risk score for the phone number specified in the request
+        properties:
+          level:
+            type: string
+            description: |
+              A string indicating the severity of the risk. 
+          recommendation:
+            type: string
+            description: |
+              A string indicationg the action that TeleSign recommends that you take based on the risk score.
+          score:
+            type: string
+            description: |
+              One of the [scores and risk levels](https://enterprise.telesign.com/api-reference/score-api/overview#score-and-risk-levels) values.

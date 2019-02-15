@@ -1,0 +1,632 @@
+swagger: '2.0'
+info:
+  version: '1.0'
+  title: App Verify API
+  description: The App Verify web service allows you to verify devices through a voice call using a verification code provided in the caller ID.
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+  /verify/auto/voice/initiate:
+    post:
+      description: |-
+        Use this to request that a phone number you specify receive a verification code by caller ID, which you also specify. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the App Verify API initiate endpoint: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use endpoint `https://rest-ww.telesign.com/v1/verify/auto/voice/initiate`
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: phone_number
+          type: string
+          required: true
+          description: |
+            Your end user's phone number, including the country code.
+        - in: formData
+          name: carrier
+          type: string
+          description: |
+            The name of the company providing communication services for the device. This parameter takes the form of a string that can be up to 32 characters long. The Android source for this parameter is `TelephonyManager.getNetworkOperatorName()`.
+        - in: formData
+          name: connection_type
+          type: string
+          description: |
+            The type of connection the device uses, such as WiFi or cellular. This parameter is an integer up to 3 characters long. The Android source for this parameter is `ConnectivityManager.getActiveNetworkInfo().getType()`. You can read more about the ConnectivityManager on Android's [ConnectivityManager](https://developer.android.com/reference/android/net/ConnectivityManager) page.
+        - in: formData
+          name: device_icc
+          type: string
+          description: |
+            The international country code for the carrier for the device. This is an integer that is 3 characters long. The Android source for this parameter is `TelephonyManager.getSimCountryIso()` or `TelephonyManager.getNetworkCountryIso().
+        - in: formData
+          name: device_phone_number
+          type: string
+          description: |
+            The phone number associated with the device. This parameter is a string that can be up to 32 characters long. The Android source for this parameter is `TelephonyManager.getLine1Number()`.
+        - in: formData
+          name: is_roaming
+          type: string
+          description: |
+            Whether the device is considered to be roaming in the current network, for Global System for Mobile Communications (GSM) purposes. It is an integer that is 1 character long. The Android source for this parameter is `TelephonyManager.isNetworkRoaming()`.
+        - in: formData
+          name: is_voice_capable
+          type: string
+          description: |
+            Whether the device is capable of sending and receiving voice calls and messages. It is an integer that is 1 character long. The Android source for this parameter is `TelephonyManager.isVoiceCapable()`.
+        - in: formData
+          name: network_type
+          type: string
+          description: |
+            The type of network the device is in. It is an integer that is 3 characters long. The Android source for this parameter is `TelephonyManager.getNetworkType()`.
+        - in: formData
+          name: os_version
+          type: string
+          description: |
+            The version of the operating system the device uses. It is a string that is 8 characters long.
+        - in: formData
+          name: platform_version
+          type: string
+          description: |
+            The version of Android the device uses. It is a string that is 8 characters long.
+        - in: formData
+          name: verify_code
+          type: string
+          description: |
+            If you choose to specify a code (it should be five digits long), then you would add it to your initiate request as a string as shown in the example. You must have this feature enabled, speak with your Technical Account Manager for assistance.
+            [Example] `verify_code="37760"`
+        - in: formData
+          name: verification_timeout
+          type: integer
+          description: |
+            An integer that represents the time in seconds that the handset is going to wait for the verification call to arrive, from the time it receives a successful initiate response. The call time is limited to 45 seconds.
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -10001 | Not Allowed Host (indicates that the IP address you are connecting from is not authorized to access the service) -or- Unsupported product name | 
+            | -30002 | Account not activated |
+            | -30003 | Account limit reached |
+            | -30014 | Invalid App Verify API finalize | 
+            | -40006 | Bad Request | 
+            | -40007 | Rate limit exceeded | 
+            | -40022 | App Verify API not supported | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -10009 | Invalid source IP address |
+            | -20002 | This product is not enabled for this customer ID |
+            | -20003 | This feature is not enabled for this CustomerID  |
+            | -30002 | CustomerID Account Not Activated | 
+            | -30003 | CustomerID New Account Limit Reached |
+            | -40002 | Not Authorized | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40004 | Resource not found | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '405':
+          description: |
+            Indicates that the request method is known by the server but has been disabled and cannot be used. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40005 | Method not allowed |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -40008 | [Product method] exceed transaction hard cap; Request denied |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -90001 | System unavailable; please try again later |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+  '/verify/auto/voice/{reference_id}':
+    get:
+      description: |
+        The get status request is used to get the status of the voice call you initiated. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would. 
+
+        All requests submitted for the get status endpoint for the App Verify API: 
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use endpoint `https://rest-ww.telesign.com/v1/verify/auto/voice/<reference_id>`
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - applicaton/json
+      parameters:
+        - in: path
+          name: reference_id
+          type: string
+          required: true
+          description: |
+            The reference identifier that TeleSign returned in the response to your request to the initiate endpoint. Use it here to determine the status of your voice call. 
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -10001 | Not Allowed Host (indicates that the IP address you are connecting from is not authorized to access the service) -or- Unsupported product name | 
+            | -50059 | Status not available | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If 
+            you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -10009 | Invalid source IP address |
+            | -40002 | Not Authorized | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -40008 | [Product method] exceed transaction hard cap; Request denied |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again. Error   codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -90001 | System unavailable; please try again later |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+  /verify/auto/voice/finalize:
+    post:
+      description: |-
+        The finalize request is used to terminate the call if the handset does not terminate the call in your application. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the App Verify API finalize endpoint: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use the `https://rest-ww.telesign.com/v1/verify/auto/voice/finalize` endpoint
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: reference_id
+          type: string
+          required: true
+          description: |
+            The reference identifier that TeleSign generates and returns in its response to your verify/call service request. This value uniquely identifies each TeleSign web service request. [Example] `reference_id=ABCDEF0123456789ABCDEF0123456789`
+        - in: formData
+          name: verify_code
+          type: string
+          description: |
+            Caller ID parsed by app from the caller id displayed on the device.
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -10001 | Not Allowed Host (indicates that the IP address you are connecting from is not authorized to access the service) -or- Unsupported product name | 
+            | -30002 | Account not activated |
+            | -30003 | Account limit reached |
+            | -30014 | Invalid App Verify API finalize | 
+            | -40006 | Bad Request | 
+            | -40007 | Rate limit exceeded | 
+            | -40022 | App Verify API not supported | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If 
+            you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -10009 | Invalid source IP address |
+            | -20002 | This product is not enabled for this customer ID |
+            | -20003 | This feature is not enabled for this CustomerID  |
+            | -30002 | CustomerID Account Not Activated | 
+            | -30003 | CustomerID New Account Limit Reached |
+            | -40002 | Not Authorized | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40004 | Resource not found | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '405':
+          description: |
+            Indicates that the request method is known by the server but has been disabled and cannot be used. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40005 | Method not allowed |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -40008 | [Product method] exceed transaction hard cap; Request denied |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again. Error   codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -90001 | System unavailable; please try again later |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+  /verify/auto/voice/finalize/callerid:
+    post:
+      description: |-
+        If a call is unsuccessful, the device will not receive the call. If there is a prefix sent by TeleSign in the initiate request and it cannot be matched to the CLI of the verification call, you can use use the Finalize CallerID Unknown endpoint to report the issue to TeleSign for troubleshooting. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the App Verify API callerID endpoint: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use the `https://rest-ww.telesign.com/v1/verify/auto/voice/finalize/callerid` endpoint
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: customer_id
+          type: string
+          description: 'Your customer ID, assigned to you by TeleSign.'
+        - in: formData
+          name: reference_id
+          type: string
+          required: true
+          description: |
+            The reference identifier that TeleSign generates and returns in its response to your verify/call service request. This value uniquely identifies each TeleSign web service request. [Example] `reference_id=ABCDEF0123456789ABCDEF0123456789`      
+        - in: formData
+          name: unknown_caller_id
+          type: string
+          description: |
+            The caller ID that was not recognized.
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -10001 | Not Allowed Host (indicates that the IP address you are connecting from is not authorized to access the service) -or- Unsupported product name | 
+            | -30002 | Account not activated |
+            | -30003 | Account limit reached |
+            | -30014 | Invalid App Verify API finalize | 
+            | -40006 | Bad Request | 
+            | -40007 | Rate limit exceeded | 
+            | -40022 | App Verify API not supported | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If 
+            you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -10009 | Invalid source IP address |
+            | -20002 | This product is not enabled for this customer ID |
+            | -20003 | This feature is not enabled for this CustomerID  |
+            | -30002 | CustomerID Account Not Activated | 
+            | -30003 | CustomerID New Account Limit Reached |
+            | -40002 | Not Authorized | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40004 | Resource not found | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '405':
+          description: |
+            Indicates that the request method is known by the server but has been disabled and cannot be used. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40005 | Method not allowed |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -40008 | [Product method] exceed transaction hard cap; Request denied |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again. Error   codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -90001 | System unavailable; please try again later |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+  /verify/auto/voice/finalize/timeout:
+    post:
+      description: |-
+        If a mobile device verification call does not make it to the designated handset within the specified amount of time, you can use the Finalize Timeout endpoint to report the issue to TeleSign. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the App Verify API timeout endpoint:
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use the `https://rest-ww.telesign.com/v1/verify/auto/voice/finalize/timeout` endpoint
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: reference_id
+          type: string
+          required: true
+          description: |
+            The reference identifier that TeleSign generates and returns in its response to your verify/call service request. This value uniquely identifies each TeleSign web service request. [Example] `reference_id=ABCDEF0123456789ABCDEF0123456789`      
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -10001 | Not Allowed Host (indicates that the IP address you are connecting from is not authorized to access the service) -or- Unsupported product name | 
+            | -30002 | Account not activated |
+            | -30003 | Account limit reached |
+            | -30014 | Invalid App Verify API finalize | 
+            | -40006 | Bad Request | 
+            | -40007 | Rate limit exceeded | 
+            | -40022 | App Verify API not supported | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If 
+            you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -10009 | Invalid source IP address |
+            | -20002 | This product is not enabled for this customer ID |
+            | -20003 | This feature is not enabled for this CustomerID  |
+            | -30002 | CustomerID Account Not Activated | 
+            | -30003 | CustomerID New Account Limit Reached |
+            | -40002 | Not Authorized | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40004 | Resource not found | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '405':
+          description: |
+            Indicates that the request method is known by the server but has been disabled and cannot be used. 
+            | Error Codes | Description |
+            |-------------|-------------|
+            | -40005 | Method not allowed |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Error codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -40008 | [Product method] exceed transaction hard cap; Request denied |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again. Error   codes are listed in the `error` parameter in the response. 
+            | Error Code | Description |
+            |------------|-------------|
+            | -90001 | System unavailable; please try again later |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/AppVerifyResponse'
+definitions:
+  AppVerifyResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service requests. The value is unique to each web service request, is randomly generated by TeleSign, and is returned in the response message immediately following the web service request. 
+      sub_resource:
+        type: string
+        description: |
+          A string displaying the subresource accessed. It is set to contact. 
+      errors:
+        type: object
+        description: |
+          A JSON object that contains information on error conditions that might have resulted from the request, in an array of propery value pairs. If multiple errors occur, a pair is returned for each error. 
+          | Value | Description |
+          |-------|-------------|
+          | code | A 1 to 5-digit error code (possibly negative) that indicates the type of error that occurred. | 
+          | description | A string that describes the type of error that occurred. If no errors occur, then this array is empty. |
+      verify:
+        type: object
+        description: |
+          The transaction state of the App Verify API. 
+          | Value | Description |
+          |-------|-------------|
+          | code_state | State of the transaction. Values include UNKNOWN and COMPLETE. |
+          | code_entered | Indicates the reason for the success or failure of the verification transaction. For example, if the call has not completed, TeleSign returns "Call in Progress". | 
+      status:
+        type: object
+        description: |
+          An object containing details about the request status. 
+        properties:
+          code:
+            type: string
+            description: |
+              One of the status codes or error codes. 
+              | Value | Description | 
+              |-------|-------------| 
+              | 2400 | Pending | 
+              | 2401 | Success | 
+              | 2402 | Failure | 
+              | 2403 | Not Attempted | 
+              | 2404 | Invalid Phone Number | 
+              | 2405 | Not Supported | 
+              | 2407 | CallerID prefix did not match | 
+              | 2408 | Unsupported phone type | 
+              | 2409 | Verification call not received |
+              | 2410 | Please retry verification |
+              | 2411 | Verification call failed |
+              | 2429 | Call blocked by customer request | 
+              | 2430 | Call blocked by TeleSign | 
+          description:
+            type: string
+            description: |
+              Text describing the transaction status.
+          updated_on:
+            type: string
+            description: |
+              An [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) timestamp indicating when the transaction status was updated.

@@ -1,0 +1,324 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: Score API
+  description: 'This spec contains details about the Score API. The TeleSign Score API allows you to submit a phone number and find out its reputation score based on phone number intelligence, traffic patterns, machine learning and a global data consortium. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+  '/score/{complete_phone_number}':
+    post:
+      summary: Send a request that a phone number be evaluated to see whether it is potentially used for fraudulent activities.
+      description: |-
+        The Score API is a REST API that delivers reputation scoring based on phone number intelligence, traffic patterns, machine learning, and a global data consortium. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would. 
+
+        All requests submitted for the Score API: 
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use `https://rest-ww.telesign.com/v1/score/<complete_phone_number>` as the endpoint. The complete phone number includes the country code and has no special characters or spaces
+        * Accept only UTF-8 encoded unicode characters as inputs. 
+        * Use **Content-Type** application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - in: path
+          name: complete_phone_number
+          required: true
+          description: |
+            The phone number you want to collect information about. Provide the entire phone number, including the country code, with no spaces or special characters.
+          type: string
+        - in: formData
+          name: account_lifecycle_event
+          type: string
+          required: true
+          description: |
+            The account lifecycle event parameter allows you to send information about what stage an end user was in when you retrieved information about their phone number. Acceptable values for this parameter are -
+            * create - For the creation of a new account.
+            * sign-in - For when an end user signs in to their account.
+            * transact - For when an end user completes a transaction within their account.
+            * update - For when an update is performed, such as an update of account information or similar.
+            * delete - For when an account is deleted. 
+        - in: formData
+          name: originating_ip
+          type: string
+          description: |
+            Your end user's IP address (do not send your own Ip address). IPv4 and IPv6 are supported. For IPv4, the value must be in the format defined by the Internet Engineering Task Force (IETF) in the Internet-Draft doucment titled <a href="https://tools.ietf.org/html/rfc791">Internet Protocol</a>. For IPv6, the value must be in the format defined by the IETF in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc4291#section-2.2">IP Version 6 Addressing Arcitecture</a>.
+        - in: formData
+          name: device_id
+          type: string
+          description: |
+            Your end user's device ID. This value is case sensitive, a string, must be greated with Unicode characters, and encoded as UTF-8. 
+        - in: formData
+          name: account_id
+          type: string
+          description: |
+            Your end user's account ID. This value is case sensitive, a string, must be created with Unicode characters, and encoded as UTF-8.
+        - in: formData
+          name: email_address
+          type: string
+          description: |
+            Your end user's email address. This value is case sensitive, a string, must be created with Unicode characters, and encoded as UTF-8. 
+      responses:
+        '200':
+          description: |-
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+                       
+            | Status Code | Associated Text String | Description                                      |
+            |-------------|------------------------|--------------------------------------------------|
+            | 300         | Transaction successfully completed           | The system was able to obtain all of the requested data for PhoneID.                      |
+            | 301         | Transaction partially completed | The system was able to obtain some of the data for PhoneID, but not all of it.                  |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+              | Status Code | Associated Text String | 
+              |-------------|------------------------|
+              | 10032       | Message blocked by TeleSign               | 
+              | 10033       | Unverified phone_number requested for trial account.               | 
+              | 11000       | Invalid value for parameter phone_number | 
+              | 11001       | Invalid country code for parameter phone_number           | 
+              | 11002       | Invalid value for parameter account_id   |
+              | 11003       | Invalid value for parameter account_lifecycle_event | 
+              | 11005       | Invalid value for parameter customer_id  | 
+              | 11006       | Invalid value for parameter device_id    |
+              | 11007       | Invalid value for email_address          |
+              | 11010       | Invalid value for parameter originating_ip         | 
+              | 11011       | Invalid value for parameter reference_id | 
+              | 12000       | Missing required parameter phone_number |
+              | 12003       | Missing required parameter account_lifecycle_event |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             | Status Code | Associated Text String | 
+             |-------------|------------------------|
+             | 10008       | Invalid signature      | 
+             | 10009       | Invalid value for parameter message      | 
+             | 10010       | Invalid value for parameter originating_ip         | 
+             | 10011       | Invalid value for parameter reference_id | 
+             | 10012       | This feature is not enabled for this CustomerID             |
+             | 10013       | Invalid Request. CustomerID Account Not Found              |
+             | 10014       | Invalid source IP address                |
+             | 10015       | Invalid customer ID    |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+        '402':
+          description: |
+            Payment Required. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10030       | Insufficient funds in prepaid wallet         |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10017       | Customer ID / Reference ID not found           |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10019       | Rate Limit Exceeded    |
+            | 10020       | PhoneId Standard exceeded transaction hard cap. Request denied.                |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+        '500':
+          description: |
+            Invalid Transaction, transaction not attempted.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postScoreResponse'
+
+definitions: 
+   postScoreResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service request. The value is unique to each web service request, is randomly-generated by TeleSign, and is returned in the response message immediately following the web service request.
+      status:
+        type: object
+        description: |
+          An object containing details about the request status. 
+        properties:
+          code:
+            type: string
+            description: |
+              One of the status codes or error codes. You should code against these and not HTTP response.
+          description:
+            type: string
+            description: Text describing the transaction status.
+          updated_on:
+            type: string
+            description: |
+              An <a href="http://www.ietf.org/rfc/rfc3339.txt">RFC 3339</a> timestamp indicating when the transaction status was updated. 
+      numbering:
+        type: object
+        description: |
+          An object containing details about the numbering attributes of the specified phone number. 
+        properties:
+          original:
+            type: object
+            description: |
+              An object containing details about the original phone number passed to TeleSign's PhoneID API. 
+            properties:
+              phone_number:
+                type: string
+                description: |
+                  The base phone number. This is the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              complete_phone_number:
+                type: string
+                description: |
+                  The base phone number prefixed with the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              country_code:
+                type: string
+                description: |
+                  A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for the United Kingdom is 44.
+          cleansing:
+            type: object
+            description: |
+              An object containing details about how the phone number was cleansed. Phone cleansing corrects common formatting issues in submitted phone numbers.
+            properties:
+              call:
+                type: object
+                description: |
+                  An object containing cleansing details about a phone number used for receiving voice calls. 
+                properties:
+                  cleansed_code:
+                    type: string
+                    description: |
+                      One of the [phone number cleansing codes](/api-reference/codes-languages-and-time-zones/shared#phone-number-cleansing-codes) describing the cleansing operation TeleSign performed on the phone number. The default value is 100 (no changes were made to the phone number).
+                  country_code:
+                    type: string
+                    description: |
+                      A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for United Kingdom is 44.
+                  max_length:
+                    type: string
+                    description: |
+                      The maximum number of digits allowed for phone numbers with this particular country dialing code.
+                  min_length:
+                    type: string
+                    description: |
+                      The minimum number of digits allowed for phone numbers with this particular country dialing code.
+                  phone_number:
+                    type: string
+                    description: |
+                      The base phone number. This is simply the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              sms:
+                type: object
+                description: |
+                  An object containing cleansing details about a phone number used for receiving text messages.
+                properties:
+                  cleansed_code:
+                    type: string
+                    description: |
+                      One of the [phone number cleansing codes](/api-reference/codes-languages-and-time-zones/shared#phone-number-cleansing-codes) describing the cleansing operation TeleSign performed on the phone number. The default value is 100 (no changes were made to the phone number).
+                  country_code:
+                    type: string
+                    description: |
+                      A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for United Kingdom is 44.
+                  max_length:
+                    type: string
+                    description: |
+                      The maximum number of digits allowed for phone numbers with this particular country dialing code.
+                  min_length:
+                    type: string
+                    description: |
+                      The minimum number of digits allowed for phone numbers with this particular country dialing code.
+                  phone_number:
+                    type: string
+                    description: |
+                      The base phone number. This is simply the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+      phone_type:
+        type: object
+        properties:
+          code:
+            type: string
+            description: 'One of the [phone type codes](https://enterprise.telesign.com/api-reference/codes-languages-and-time-zones/shared#phone-type-codes).'
+          description:
+            type: string
+            description: Text describing the phone type.
+      blocklisting:
+        type: object
+        description: |
+          An object containing details about whether the number was blocked and who requested the block. To see this information, speak with your TAM to have blocklisting information enabled.
+        properties:
+          block_code:
+            type: string
+            description: |
+              A code indicating whether the number is blocked, and who blocked it. 0 for not blocked, 1 for blocked by TeleSign, 2 for block requested by your organization, and 3 for block requested by one of your suborganizations (if you do not have any suborganizations, you will not see this option).
+          block_description:
+            type: string
+            description: |
+              This provides a brief description of whether number is blocked. You will see either 'Blocked' or 'Not blocked'.
+          blocked:
+            type: boolean
+            description: |
+              If the number is blocked, this will be set to True. If it is not blocked, it will be set to False.
+      carrier:
+        type: object
+        description: |
+          An object containing information about the company that provides telecommunications servoces for the phone number. 
+        properties:
+          carrier_id:
+            type: string
+            description: A string specifying the ID number for the carrier.
+          name:
+            type: string
+            description: |
+              A string specifying the name of the carrier.
+            example: Verizon
+      risk:
+        type: object
+        description: |
+          An object that describes the risk score for the phone number specified in the request
+        properties:
+          level:
+            type: string
+            description: |
+              A string indicating the severity of the risk. 
+          recommendation:
+            type: string
+            description: |
+              A string indicationg the action that TeleSign recommends that you take based on the risk score.
+          score:
+            type: string
+            description: |
+              One of the scores and risk levels values.

@@ -1,0 +1,453 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Phone Numbers API
+  description: This spec contains details about the TeleSign Phone Numbers API. The Phone Numbers API allows you to search for and buy phone numbers for use with TeleSign's products. You can also cancel phone numbers you bought.
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1/phone_numbers
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+  /numbers:
+    get:
+      description: |-
+        Use this API to search for available phone numbers you can lease. You can search by country and whether a number is voice or sms capable. You can adjust the way pages return data in a response to your query.
+
+        This part of the Phone Numbers API: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Uses `https://rest-ww.telesign.com/v1/phone_numbers/numbers` as the base endpoint
+        * Accepts only UTF-8 encoded unicode characters as inputs
+        * Uses **Content-Type** - application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: country_iso2
+          type: string
+          description: |
+            A two digit code that uniquely identifies a country.
+        - in: formData
+          name: sms_capable
+          type: boolean
+          description: |
+            A boolean value that indicates whether you want returned numbers to be sms capable or not. If you enter 'TRUE', only phone numbers that are SMS capable will be returned. If you enter 'FALSE', only phone numbers that are not SMS capable will be returned.
+        - in: formData
+          name: voice_capable
+          type: boolean
+          description: |
+            A boolean value that indicates whether you want returned numbers to be voice capable or not. If you enter 'TRUE', only phone numbers that are voice capable will be returned. If you enter 'FALSE', only phone numbers that are not voice capable will be returned.
+        - in: formData
+          name: page
+          type: string
+          description: |
+            This parameter lets you retrieve a specific page of available phone numbers.
+        - in: formData
+          name: page_size
+          type: string
+          description: |
+            This parameter allows you to set a specific sender ID to be used on an SMS message sent to the end user. In order to use a specific sender ID, TeleSign must whitelist your selected sender ID values. Be aware that 100% preservation of a sender ID value is not guaranteed. TeleSign may override the sender ID value that your end user will receive in order to improve delivery quality or follow SMS regulations in particular countries. In order to use this feature, you must contact TeleSign Support and have them enable it for you.
+      responses:
+        '200':
+          description: |
+            Your request was successful.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getNumbersResponse'
+        '429':
+          description: |
+            Too many requests. 
+        '503':
+          description: |
+            The service is unavailable.
+  /leases:
+    get:
+      description: |-
+        Send a GET request to find out what phone numbers you are currently leasing.
+
+        This part of the Phone Numbers API: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Uses `https://rest-ww.telesign.com/v1/phone_numbers/leases` as the base endpoint
+        * Accepts only UTF-8 encoded unicode characters as inputs
+        * Uses **Content-Type** - application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: page
+          type: string
+          description: |
+            The page you want returned. 
+        - in: formData
+          name: page_size
+          type: integer
+          description: |
+            The amount of entries you want returned per page. 
+      responses:
+        '200':
+          description: |
+            Your request was successful.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getLeasesResponse'
+        '429':
+          description: |
+            Too many requests. 
+        '503':
+          description: |
+            The service is unavailable.
+    post:
+      summary: Use a POST request to create a lease for a phone number you choose.
+      description: |-
+        Send a POST request identifying the phone number you want to create a lease for. If the number is available you will be able to lease it.
+
+        This part of the Phone Numbers API: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Uses `https://rest-ww.telesign.com/v1/phone_numbers/leases` as the base endpoint
+        * Accepts only UTF-8 encoded unicode characters as inputs
+        * Uses **Content-Type** - application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: country_iso2
+          required: true
+          type: string
+          description: |
+            A two digit code that uniquely identifies a country.
+        - in: formData
+          name: phone_number
+          required: true
+          type: string
+          description: |
+            The complete phone number including the country code that you want to lease. 
+      responses:
+        '200':
+          description: |
+            Your request was successful.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/createLeasesResponse'
+        '429':
+          description: |
+            Too many requests. 
+        '503':
+          description: |
+            The service is unavailable.          
+  '/leases/{lease_id}':
+    delete:
+      summary: Use this API to cancel a lease on a phone number.
+      description: |-
+        Include the lease ID for the phone number you want to stop leasing in your request, and you can cancel the lease. 
+
+        This part of the Phone Numbers API: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Uses `https://rest-ww.telesign.com/v1/phone_numbers/leases/{lease_id}` as the base endpoint
+        * Accepts only UTF-8 encoded unicode characters as inputs
+        * Uses **Content-Type** - application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: lease_id
+          required: true
+          type: string
+          description: |
+            The unique identification number associated with the lease for the phone number you purchased.  
+      responses:
+        '200':
+          description: |
+            Your request was successful.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/deleteLeasesResponse'
+        '429':
+          description: |
+            Too many requests. 
+        '503':
+          description: |
+            The service is unavailable.       
+definitions:
+  getNumbersResponse:
+    type: object
+    properties:
+      data:
+        type: object
+        description: |
+          Returns a list of dictionaries, where each dictionary is for a number with the following information.
+        properties:
+          country_iso2:
+            type: string
+            description: |
+              The two-digit country code associated with the country for the phone number returned.
+          phone_number:
+            type: string
+            description: |
+              The phone number.
+          operator_name:
+            type: string
+            description: |
+              The name of the service provider associated with the phone number.
+          setup_price:
+            type: string
+            description: |
+              The price for configuring the phone number for use. 
+          recurring_price:
+            type: string
+            description: |
+              The recurring cost of leasing the phone number.
+          capabilities:
+            type: object
+            description: |
+              Object containing details about whether the number is sms or voice capable or both.
+            properties:
+              sms:
+                type: boolean
+                description: |
+                  Whether the number is sms capable or not.
+              voice:
+                type: boolean
+                description: |
+                  Whether the number is voice capable or not. 
+          pagination:
+            type: object
+            description: |
+              Returns information about how many pages of information, and how much information per page is returned to you. 
+            properties:
+              page:
+                type: object
+                description: 'Returns the information for the page. The information on the page is each set of data listed in the data section above for each phone number returned. The page is determined by page size. If you say ten for page size, then each page has ten entries. If you say page five, then you would receive entries 41-50 in the response.'
+              total_pages:
+                type: integer
+                description: |
+                  The total number of pages returned. 
+              page_size:
+                type: integer
+                description: |
+                  How many entries will be returned per page. This is flexible.
+  getLeasesResponse:
+    type: object
+    properties:
+      data:
+        description: |
+          Returns a list of dictionaries, where each dictionary is for a number with the following information.
+        type: object
+        properties:
+          country_iso2:
+            type: string
+            description: |
+              The two-digit country code associated with the country for the phone number returned.
+          phone_number:
+            type: string
+            description: |
+              The phone number. 
+          operator_name:
+            type: string
+            description: |
+              The name of the service provider associated with the phone number.
+          setup_price:
+            type: string
+            description: |
+              The price for configuring the phone number for use. 
+          recurring_price:
+            type: string
+            description: |
+              The recurring cost of leasing the phone number.
+          price_currency:
+            type: string
+            description: |
+              What currency the prices are listed in. 
+          recurrence_period:
+            type: integer
+            description: |
+              How long the lease lasts before it renews or is canceled. The period is an integer representing months. 
+          capabilities:
+            type: object
+            description: |
+              Object containing details about whether the number is sms or voice capable or both. 
+            properties:
+              sms:
+                type: boolean
+                description: |
+                  Whether the number is sms capable or not.
+              voice:
+                type: boolean
+                description: |
+                  Whether the number is voice capable or not. 
+          lease:
+            type: object
+            description: |-
+              Object containing details about when you leased the phone number, when it expires, and what the lease ID is. 
+               
+            properties:
+              lease_id:
+                type: string
+                description: |
+                  A unique identification number referencing your lease. 
+              created_on_utc:
+                type: string
+                description: |
+                  A timestamp indicating when you first leased the phone number. 
+              expires_on_utc:
+                type: string
+                description: |
+                  A timestamp indicating when your lease for the phone number expires.
+  createLeasesResponse:
+    type: object
+    properties:
+      data:
+        description: |
+          Returns details about the phone number you created a lease for.
+        type: object
+        properties:
+          country_iso2:
+            type: string
+            description: |
+              The two-digit country code associated with the country for the phone number returned.
+          phone_number:
+            type: string
+            description: |
+              The phone number. 
+          operator_name:
+            type: string
+            description: |
+              The name of the service provider associated with the phone number.
+          setup_price:
+            type: string
+            description: |
+              The price for configuring the phone number for use. 
+          recurring_price:
+            type: string
+            description: |
+              The recurring cost of leasing the phone number.
+          price_currency:
+            type: string
+            description: |
+              What currency the prices are listed in. 
+          recurrence_period:
+            type: integer
+            description: |
+              How long the lease lasts before it renews or is canceled. The period is an integer representing months. 
+          capabilities:
+            type: object
+            description: |-
+              Object containing details about whether the number is sms or voice capable or both. 
+               
+            properties:
+              sms:
+                type: boolean
+                description: |
+                  Whether the number is sms capable or not.
+              voice:
+                type: boolean
+                description: |
+                  Whether the number is voice capable or not. 
+          lease:
+            type: object
+            description: |
+              Object containing details about when you leased the phone number, when it expires, and what the lease ID is. 
+            properties:
+              lease_id:
+                type: string
+                description: |
+                  A unique identification number referencing your lease. 
+              created_on_utc:
+                type: string
+                description: |
+                  A timestamp indicating when you first leased the phone number. 
+              expires_on_utc:
+                type: string
+                description: |
+                  A timestamp indicating when your lease for the phone number expires.
+  deleteLeasesResponse:
+    type: object
+    properties:
+      data:
+        type: object
+        description: |
+          Returns details about the phone number you canceled the lease for.
+        properties:
+          country_iso2:
+            type: string
+            description: |
+              The two-digit country code associated with the country for the phone number returned.
+          phone_number:
+            type: string
+            description: |
+              The phone number. 
+          operator_name:
+            type: string
+            description: |
+              The name of the service provider associated with the phone number.
+          setup_price:
+            type: string
+            description: |
+              The price for configuring the phone number for use. 
+          recurring_price:
+            type: string
+            description: |
+              The recurring cost of leasing the phone number.
+          price_currency:
+            type: string
+            description: |
+              What currency the prices are listed in. 
+          recurrence_period:
+            type: integer
+            description: |
+              How long the lease lasts before it renews or is canceled. The period is an integer representing months. 
+          capabilities:
+            type: object
+            description: |
+              Object containing details about whether the number is sms or voice capable or both. 
+            properties:
+              sms:
+                type: boolean
+                description: |
+                  Whether the number is sms capable or not.
+              voice:
+                type: boolean
+                description: |
+                  Whether the number is voice capable or not. 
+          lease:
+            type: object
+            description: |
+              Object containing details about when you leased the phone number, when it expires, and what the lease ID is. 
+            properties:
+              lease_id:
+                type: string
+                description: |
+                  A unique identification number referencing your lease. 
+              created_on_utc:
+                type: string
+                description: |
+                  A timestamp indicating when you first leased the phone number. 
+              expires_on_utc:
+                type: string
+                description: |
+                  A timestamp indicating when your lease for the phone number expires.

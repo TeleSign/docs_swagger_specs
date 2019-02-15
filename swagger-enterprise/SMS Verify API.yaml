@@ -1,0 +1,318 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: SMS Verify API
+  description: 'This spec contains details about the TeleSign SMS Verify API. The TeleSign SMS Verify API allows you to send patented phone-based verification and two-factor authentication using a time-based, one-time passcode sent over SMS. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+
+  '/verify/sms':
+    post:
+      summary: Send a request that a text message be sent to a specified phone number.
+      description: |-
+        Send a message (with a verification code if you wish), specify the type of message, what phase of the account lifecycle the message is being sent in, and additional details about the transaction. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the SMS Verify API:
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest) authentication
+        * Use `https://rest-ww.telesign.com/v1/verify/sms` as the base endpoint
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** - application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: phone_number
+          type: string
+          required: true
+          description: |
+            The end user's phone number you want to send a message to, as a string of digits without spaces or special characters, beginning with the country dialing code.
+        - in: formData
+          name: ucid
+          type: string
+          description: |
+            A string specifying a use case code. Choices include -
+            * ATCK - for use in a 2FA situation like updating an account or logging in
+            * BACF - for creating an account where the service may be vulnerable to bulk attacks and fraudsters
+            * BACS - for creating an account where the service may be vulnerable to bulk attacks or individual spammers
+            * CHBK - for use when someone is trying to buy something expensive or unusual and you want to verify it is really them
+            * CLDR - calendar event
+            * LEAD - for use in a situation where you require a person to enter personal information in order to obtain information about something like a loan or realty or school, and you want to check if the person is bogus or not
+            * OTHR - if you have a situation not addressed by other tags
+            * PWRT - for use in a situation where a password reset is required
+            * RESV - for use when you have end users making reservations and not showing up, and you want to be able to include phone verification in the loop
+            * RXPF - for use when you are trying to prevent prescription fraud
+            * SHIP - for use when you are sending a shipping notification
+            * THEF - for use when you are trying to prevent an end user from deactivating or redirecting a phone number in order to take over someone else's identity
+            * TRVF - for use when you are transferring money and you want to check to see if it is approved by sending a text message or phone call to your end user. This is similar to CHBK, but is specifically for a money transaction
+            * UNKN - if you have a situation not addressed by other tags (same as OTHR)
+        - in: formData
+          name: originating_ip
+          type: string
+          description: |
+            Your end user's IP address (do not send your own IP address). IPv4 and IPv6 are supported. For IPv4, the value must be in the format defined by the Internet Engineering Task Force (IETF) in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc791">Internet Protocol</a>. For IPv6, the value must be in the format defined by the IETF in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc4291#section-2.2">IP Version 6 Addressing Architecture</a>.
+        - in: formData
+          name: language
+          type: string
+          description: 'The IETF language tag used in applying predefined templates. For a complete list of language tags, see the section [Supported Languages for Messages](/api-reference/codes-languages-and-time-zones/shared#supported-languages-for-messages).'
+        - in: formData
+          name: verify_code
+          type: string
+          description: |
+            The verification code used for the code challenge. This is a randomly-generated numeric value. By default, TeleSign automatically generates a seven digit value for you. If you use this method, you must perform a Get Status request to validate the verify_code entered by the end user. If you prefer to use your own verification code, you can override the default behavior by including this parameter and giving it a numeric value between 000 and 9999999. If you submit a template message in the template parameter, or if you already have a template text message registered with TeleSign, the value of `verify_code` replaces the token `$$CODE$$` in the template. 
+        - in: formData
+          name: template
+          type: string
+          description: |
+            A text message that overrides the predefined text message templates. Your text message must incorporate a $$CODE$$ placeholder to integrate the verify_code field. The standard message is a maximum of 160 characters, however if you want to send long messages, you can contact your Technical Account Manager to have this feature enabled. A long message may be up to 1600 characters or 2000 code points, however TeleSign recommends that you keep your messages brief when possible. You must take character coding into consideration when creating your message, so that it can be easily localized into foreign languages. Contact TeleSign Technical Support with any questions or concerns.
+        - in: formData
+          name: num_deac_req
+          type: string
+          description: |
+            To use this parameter, you must have the Number Deactivation service enabled. Contact your Technical Account Manager. This parameter can be true or false, specifying whether a number deactivation check will be done for the destination number. By default it is set to true, specifying that a number deactivation check be done. If this parameter is set to anything other than true, it is interpreted as false.
+        - in: formData
+          name: last_valid_activity_time
+          type: string
+          description: |
+            To use this parameter, you must have the Number Deactivation service enabled. Contact your Technical Account Manager. This parameter is an RFC 1123 time stamp indicating when the last valid activity of the end user was recorded on your application or server. If this parameter is not set, it is interpreted to mean that this phone number did not have any valid action in the past.
+        - in: formData
+          name: deactivation_lookup_window
+          type: string
+          description: |
+            To use this parameter, you must have the Number Deactivation service enabled. Contact your Technical Account Manager. This parameter specifies the window of time in which the TeleSign system will look for the Number Deactivation event. The value is the number of days preceding the Verify SMS request that defines the window of time to examine. If this parameter is not set, the value from the you should be applied. If you do not set this parameter, the default value of 0 will be used.
+        - in: formData
+          name: number_deactivation_action
+          type: string
+          description: |
+            To use this parameter, you must have the Number Deactivation service enabled. Contact your Technical Account Manager. This parameter can have the values block or flag. block specifies that an SMS request not be sent if there is a Number Deactivation event and all required conditions are met. If you do not set this parameter, the default value is block. flag specifies that an SMS always be sent.
+        - in: formData
+          name: sender_id
+          type: string
+          description: |
+            This parameter allows you to set a specific Sender ID to be used on an SMS message sent to the end user. Although this parameter is available, there are certain things that you need to be aware of:
+              * In order to use a specific SenderID, TeleSign will have to whitelist the SenderID values and enable the functionality. Please contact the Support Team or your Technical Account Manager for further instructions.
+              * Preservation of the Sender ID value is not 100% guaranteed. TeleSign may override the Sender ID value that your end user will receive in order to improve delivery quality and/or follow SMS regulations in particular countries.
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             
+             | Status Code | Associated Text String | Description                                      |
+             |-------------|------------------------|--------------------------------------------------|
+             | 200         | Delivered to handset   | The SMS was delivered to the end user's phone. (Final)                                          |
+             | 203         | Delivered to gateway   | The SMS was delivered to the gateway. If the gateway responds with further information (including successful delivery to handset or delivery failure), the status is updated.    (Intermediate)                                   |
+             | 207         | Error delivering SMS to handset (reason unknown)  | The SMS could not be delivered to the end user's  handset for an unknown reason. (Final) |
+             | 210         | Temporary phone error  | The SMS could not be delivered to the handset due to a temporary error with the phone. Examples - phone is turned off, not enough memory to store the message. (Final)                             |
+             | 211         | Permanent phone error  | The SMS could not be delivered to the handset due to a permanent error with the phone. For example, the phone is incompatible with SMS, or illegally registered on the network. This can happen when a phone number is blacklisted, or is incorrectly provisioned. (Final)                             |
+             | 220         | Gateway/network cannot route message | The network cannot route the message to the handset. (Final)                                 |
+             | 221         | Message expired before delivery | The message was queued by the mobile provider and timed out before it could be delivered to the handset. (Final)                             |
+             | 222         | SMS not supported      | SMS is not supported by this phone, carrier, plan, or user.                                   |
+             | 229         | Message blocked by your request     | TeleSign blocked the SMS before it was sent. This is due to your prior submitted request to blocklist this phone number.                     |
+             | 230         | Message blocked by TeleSign    | TeleSign blocks a message if it is being sent to a phone number that is on a global blocklist.    |
+             | 231         | Invalid/unsupported    | The content of the message is not supported.     |
+             | 232         | Message blocked due to number deactivation event | It was determined that the destination number was found and/or reported as deactivated from the data stream provider. This number deactivation event occurred within the deactivation lookup window, and after the last valid activity of the end user was recorded on your side.              |
+             | 233         | Message blocked due to high risk score. | It was determined that the risk score for the  destination number is higher than configured Maximum Risk Score. For that reason TeleSign did not send the SMS.                                |
+             | 250         | Final status unknown   | The final status of the SMS cannot be determined.|
+             | 251         | Message successfully sent out for delivery, however final confirmation of delivery to handset was not received. | This message was successfully delivered to the gateway, but TeleSign cannot confirm delivery to the handset because TeleSign does not receive the final handset DLR in this region.  NOTE: There is a high probability that this message was successfully delivered to the handset.  |
+             | 290         | Message in progress    | The message is being sent to the SMS gateway.    |
+             | 291         | Queued by TeleSign     | TeleSign is experiencing unusually high volume and has queued the SMS message.                  |
+             | 292         | Queued by gateway      | The SMS gateway has queued the message.          |
+             | 295         | Status delayed         | The status of the SMS is temporarily unavailable.|
+             | 500         | Transaction not attempted        | No SMS request was attempted. |
+             | 501         | Not authorized         | No permissions for this resource, or authorization failed.                            |
+             | 502         | Campaign error         | This error can be generated if there is a problem with the short code used.                        |
+             | 503         | Carrier rejected - temporary problem    | This error is generated if there is an error on the carrier or operator side that is temporary and the message can be retried.                  |
+             | 504         | Carrier rejected - permanent error     | This error is generated if there is an error on the carrier or operator side that is permanent and the message should not be retried.           |
+             | 505         | Error on gateway - temporary error         | This error is generated if there is an error on TeleSign's partner side that is considered temporary and the message can be retried.        |
+             | 506         | Error on gateway - permanent error    | This error is generated if there is an error on TeleSign's partner side that is considered permanent and the message should not be retried. |
+             | 507         | Invalid destination address   | There is a problem with the destination address used. Either the format is not valid, or the number is not associated with any carrier, or if MSC is used it does not know about this MSISDN.  |
+             | 508         | Invalid source address | The message requires a source address. Verify that one is provided and correct.                |
+             | 509         | Parameters problem     | One or more parameters used in the request is not supported.                                       |
+             | 510         | Message blocked by subscriber action or  request   | The end user has blocked receiving SMS with their carrier plan or by request or from the particular short code used.                                 |
+             | 511         | Subscriber low on credit     | The end user exceeded their spending limits and cannot receive SMS.                              |
+             | 512         | Roaming error          | End user cannot receive SMS because their device that receives the messages is roaming.           |
+             | 513         | Mobile number portability error         | SMS failed because ported combinations are unreachable.                                     |
+             | 514         | Subscriber absent      | The operator/carrier is temporarily unable to reach the end user.       |
+             | 515         | Suspected spam         | This message is considered to be spam by carrier or operator.                                     |
+             | 599         | Status not available   | The system is unable to provide status at this time.                                            |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postSMSVerifyResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -10001     | Not Allowed Host (indicates that the IP address you are connecting from is not authorized to access the service)                 |
+            | -40006     | Bad Request              |
+            | -40007     | No Data Submitted        |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postSMSVerifyResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -10009     | Invalid source IP address|
+            | -20002     | This product is not enabled for this Customer ID.                      |
+            | -20003     | This feature is not enabled for this Customer ID.                      |
+            | -30000     | Invalid Customer ID.     |
+            | -30001     | Customer ID Account Suspended.               |
+            | -30002     | Customer ID Account Not Activated.               |
+            | -30003     | Customer ID new account limit reached.           |
+            | -40002     | Not Authorized           |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postSMSVerifyResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -10001     | CustomerID/ReferenceID not found (returned when the reference ID given does not exist)          |
+            | -10004     | Reference ID expired     |
+            | -40004     | Resource Not Found       |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postSMSVerifyResponse'
+        '405':
+          description: |
+            The request method is known by the server but has been disabled and cannot be used.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -40005     | Method Not Allowed       |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postSMSVerifyResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -40008     | {product} exceeded transaction hard cap. Request denied.          |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postSMSVerifyResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -90001     | System Unavailable, please try again later.  |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postSMSVerifyResponse'
+
+definitions: 
+  postSMSVerifyResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service request. The value is unique to each web service request, is randomly-generated by TeleSign, and is returned in the response message immediately following the web service request.
+      resource_uri:
+        type: string
+        description: |
+          The URI that accesses the verify resource. The URI is /v1/verify/[reference_id].
+      sub_resource:
+        type: string
+        description: |
+          The subresource to access; it is set to sms.
+      errors:
+        type: string
+        description: |
+          A JSON object that contains information on error conditions that might have resulted from the request, in an array of property-value pairs. If multiple errors occur, a pair is returned for each error.
+        properties:
+          code:
+            type: string
+            description: |
+              A 1 to 5-digit error code (possibly negative) that indicates the type of error that occurred.
+          description:
+            type: string
+            description: |
+              A text description corresponding to the verification status code. 
+      status:
+        type: object
+        description: An object that describes the verification status; it contains the following parameters -
+        properties:
+          code:
+            type: string
+            description: The verification status code.
+          description:
+            type: string
+            description: A text description corresponding to the verification status code.
+          updated_on:
+            type: string
+            description: |
+              An RFC 3339 timestamp indicating when the verification status was updated. 
+      verify:
+        type: object
+        description: An object that describes the verification status. It contains the following parameters -
+        properties:
+          code_state:
+            type: string
+            description: |
+              Indicates whether the verification code entered matches that which was sent. Possible values are VALID, INVALID, and UNKNOWN. When the code entered matches the code sent, the response will be VALID. When the code entered does not match the code sent, code_state will be INVALID.
+          code_entered:
+            type: string
+            description: Always set to an empty string.
+      number_deactivation_status:
+        type: object
+        description: This object contains parameters describing the status of the Number Deactivation check.
+        properties:
+          error_code:
+            type: string
+            description: |
+              This parameter can have one of these values:
+              * 0 - Number Deactivation check succeeded
+              * -40010 - Phone number is out of coverage
+              * -90001 - Number Deactivation service unavailable
+          description:
+            type: string
+            description: |
+              Text describing the error resulting from the Number Deactivation check, if any, as listed in the error_code table.
+          last_deactivated:
+            type: string
+            description: |
+              This parameter only has a value if a Number Deactivation check was done for the MSISDN. Its value is an RFC 3339 timestamp when the phone number was seen and/or reported as deactivated from the data stream provider. If there was no number deactivation event, this value is null.
+      additional_info:
+        type: object
+        description: The additional_info feature contains details about pricing (if enabled) and how many parts a message is broken into.
+        properties:
+          mcc:
+            type: string
+            description: Mobile Country Code (MCC) of the destination number. Returned if you request this feature from your Technical Account Manager.
+          mnc:
+            type: string
+            description: Mobile Network Code (MNC) of the destination number. Returned if you request this feature from your Technical Account Manager.
+          price:
+            type: string
+            description: The price of the message you are sending. Returned if you request this feature from your Technical Account Manager.
+          message_parts_count:
+            type: string
+            description: |
+              You can only get this in a response if you use Verify Transaction Callback to retrieve message status information. This parameter will display the number of parts your message was split into. If the message is not split, this returns a value of 1.

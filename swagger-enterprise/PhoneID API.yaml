@@ -1,0 +1,339 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: PhoneID API (without Add-ons)
+  description: 'This spec contains details about the TeleSign PhoneID API. The TeleSign PhoneID API allows you to submit a phone number and find out any global phone number or subscriber data available for that number. This information can be used to evaluate fraud risk. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+  '/phoneid/{complete_phone_number}':
+    post:
+      description: |-
+        Enter a phone number to receive detailed information about carrier, location, and other details. Include the country code. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the PhoneID API: 
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest)
+        * Use `https://rest-ww.telesign.com/v1/phoneid/<complete_phone_number>` as the base endpoint. The phone number must include the country code
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use **Content-Type** - application/x-www-form-urlencoded in request headers **UNLESS YOU USE AD D-ONS. To use add-ons you must switch to use application/json as the content-type for this API.** Learn more on the *[Get Started with Add-ons](/api-reference/phoneid-api/add-ons)* page 
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: complete_phone_number
+          required: true
+          description: |
+            The phone number you want to collect information about. Provide the entire phone number, including the country code, with no spaces or special characters.
+          type: string
+        - in: formData
+          name: account_lifecycle_event
+          type: string
+          description: |
+            The account lifecycle event parameter allows you to send information about what stage an end user was in when you retrieved information about their phone number. Acceptable values for this parameter are -
+            * create - For the creation of a new account.
+            * sign-in - For when an end user signs in to their account.
+            * transact - For when an end user completes a transaction within their account.
+            * update - For when an update is performed, such as an update of account information or similar.
+            * delete - For when an account is deleted. 
+        - in: formData
+          name: originating_ip
+          type: string
+          description: |
+            Your end user's IP address (do not send your own Ip address). IPv4 and IPv6 are supported. For IPv4, the value must be in the format defined by the Internet Engineering Task Force (IETF) in the Internet-Draft doucment titled <a href="https://tools.ietf.org/html/rfc791">Internet Protocol</a>. For IPv6, the value must be in the format defined by the IETF in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc4291#section-2.2">IP Version 6 Addressing Arcitecture</a>.
+        - in: formData
+          name: addons
+          type: string
+          description: You must have you Technical Account Manager enable this feature for use. The addons parameter allows you to receive PhoneID Contact information back along with standard PhoneID information. You would use it like this - 'addons=contact'
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+                       
+            | Status Code | Associated Text String | Description                                      |
+            |-------------|------------------------|--------------------------------------------------|
+            | 300         | Transaction successfully completed            | The system was able to obtain all of the requested data for PhoneID.                      |
+            | 301         | Transaction partially completed | The system was able to obtain some of the data for PhoneID, but not all of it.                  |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+              | Status Code | Associated Text String | 
+              |-------------|------------------------|
+              | 10032       | Message blocked by TeleSign               | 
+              | 10033       | Unverified phone_number requested for trial account.               | 
+              | 11000       | Invalid value for parameter phone_number | 
+              | 11001       | Invalid country code for parameter phone_number           | 
+              | 11003       | Invalid value for parameter account_lifecycle_event | 
+              | 11005       | Invalid value for parameter customer_id  | 
+              | 11010       | Invalid value for parameter originating_ip         | 
+              | 11011       | Invalid value for parameter reference_id | 
+              | 12000       | Missing required parameter phone_number |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             | Status Code | Associated Text String | 
+             |-------------|------------------------|
+             | 10008       | Invalid signature      | 
+             | 10009       | Invalid value for parameter message      | 
+             | 10010       | Invalid value for parameter originating_ip         | 
+             | 10011       | Invalid value for parameter reference_id | 
+             | 10012       | This feature is not enabled for this CustomerID             |
+             | 10013       | Invalid Request. CustomerID Account Not Found              |
+             | 10014       | Invalid source IP address                |
+             | 10015       | Invalid customer ID    |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '402':
+          description: |
+            Payment Required. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10030       | Insufficient funds in prepaid wallet         |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10017       | Customer ID / Reference ID not found           |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10019       | Rate Limit Exceeded    |
+            | 10020       | PhoneId Standard exceeded transaction hard cap. Request denied.                |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '500':
+          description: |
+            Invalid Transaction, transaction not attempted.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+definitions: 
+   postPhoneIdResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service requests. The value is unique to each web service request, is randomly generated by TeleSign, and is returned in the response message immediately following the web service request. 
+      phone_type:
+        type: object
+        description: |
+          An object containing details about the phone type. 
+        properties:
+          code:
+            type: string
+            description: |
+              One of the [phone type codes](/api-reference/codes-languages-and-time-zones/shared#phone-type-codes).
+          description:
+            type: string
+            description: |
+              Text describing the phone type. 
+      status:
+        type: object
+        description: |
+          An object containing details about the request status. 
+        properties:
+          code:
+            type: string
+            description: |
+              One of the status codes or error codes.
+          description:
+            type: string
+            description: |
+              Text describing the transaction status.
+          updated_on:
+            type: string
+            description: |
+              An <a href="http://www.ietf.org/rfc/rfc3339.txt">RFC 3339</a> timestamp indicating when the transaction status was updated. 
+      numbering:
+        type: object
+        description: |
+          An object containing details about the numbering attributes of the specified phone number. 
+        properties:
+          original:
+            type: object
+            description: |
+              An object containing details about the original phone number passed to TeleSign's PhoneID API. 
+            properties:
+              phone_number:
+                type: string
+                description: |
+                  The base phone number. This is the phone number without the country dialing code.
+              complete_phone_number:
+                type: string
+                description: |
+                  The base phone number prefixed with the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              country_code:
+                type: string
+                description: |
+                  A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for the United Kingdom is 44.
+          cleansing:
+            type: object
+            description: |
+              An object containing details about how the phone number was cleansed. Phone cleansing corrects common formatting issues in submitted phone numbers.
+            properties:
+              call:
+                type: object
+                description: |
+                  An object containing cleansing details about a phone number used for receiving voice calls. 
+                properties:
+                  cleansed_code:
+                    type: string
+                    description: |
+                      One of the [phone number cleansing codes](/api-reference/codes-languages-and-time-zones/shared#phone-number-cleansing-codes) describing the cleansing operation TeleSign performed on the phone number. The default value is 100 (no changes were made to the phone number).
+                  country_code:
+                    type: string
+                    description: |
+                      A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for United Kingdom is 44.
+                  max_length:
+                    type: string
+                    description: |
+                      The maximum number of digits allowed for phone numbers with this particular country dialing code.
+                  min_length:
+                    type: string
+                    description: |
+                      The minimum number of digits allowed for phone numbers with this particular country dialing code.
+                  phone_number:
+                    type: string
+                    description: |
+                      The base phone number. This is simply the phone number without the [country dialing code](https://enterprise.telesign.com/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              sms:
+                type: object
+                description: |
+                  An object containing cleansing details about a phone number used for receiving text messages.
+                properties:
+                  cleansed_code:
+                    type: string
+                    description: |
+                      One of the [phone number cleansing codes](/api-reference/codes-languages-and-time-zones/shared#phone-number-cleansing-codes) describing the cleansing operation TeleSign performed on the phone number. The default value is 100 (no changes were made to the phone number).
+                  country_code:
+                    type: string
+                    description: |
+                      A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for United Kingdom is 44.
+                  max_length:
+                    type: string
+                    description: |
+                      The maximum number of digits allowed for phone numbers with this particular country dialing code.
+                  min_length:
+                    type: string
+                    description: |
+                      The minimum number of digits allowed for phone numbers with this particular country dialing code.
+                  phone_number:
+                    type: string
+                    description: |
+                      The base phone number. This is simply the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+      location:
+        type: object
+        description: |
+          An object containing geographical location information associated with the phone number. 
+        properties:
+          city:
+            type: string
+            description: |
+              A string specifying the name of the city associated with the phone number.
+          county:
+            type: string
+            description: |
+              A string specifying the name of the <a href="https://www.census.gov/geo/reference/county-adjacency.html">County</a> (or Parish) associated with the phone number (U.S. only).
+          state:
+            type: string
+            description: |
+              The 2-letter <a href="http://pe.usps.com/text/pub28/28apb.htm">state abbreviation code</a> of the state (province, district, or territory) associated with the phone number (North America only).
+          zip:
+            type: string
+            description: |
+              The 5-digit United States Postal Service <a href="https://www.usps.com/nationalpremieraccounts/findzipcodes.htm">Zip Code</a> associated with the phone number (U.S. only).
+          country:
+            type: object
+            description: |
+              An object containing details about the country associated with the phone number. 
+            properties:
+              iso2:
+                type: string
+                description: |
+                  The ISO 3166-1 2-letter [country code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes) associated with the phone number. 
+              iso3:
+                type: string
+                description: |
+                  The ISO 3166-1 3-letter country code associated with the phone number. 
+              name:
+                type: string
+                description: |
+                  The [country name](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes) associated with phone number.
+          time_zone:
+            type: object
+            description: |
+              An object containing details about the [time zone](/api-reference/codes-languages-and-time-zones/shared#time-zones) associated with the phone number. For maximum and minimum UTC offsets, they are specified in units of hours, and range from -12 to +14. For positive numbers, the plus sign (+) may not be returned. Additional offsets due to Daylight Savings Time or Summer Time are not considered. For example, Russia, which spans 11 time zones, has a minimum UTC offset of +2, and a maximum of +12. 
+            properties:
+              name:
+                type: string
+                description: |
+                  A string identifying the <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">Time Zone Name (TZ)</a> associated with the phone number (U.S. only).
+                example: America/Los_Angeles
+              utc_offset_max:
+                type: string
+                description: |
+                  For international phone numbers, this parameter returns the maximum UTC offset for the country associated with the phone number. For U.S. domestic phone numbers, this parameter returns the same result as utc_offset_min.
+              utc_offset_min:
+                type: string
+                description: |
+                  For U.S. domestic phone numbers, this parameter returns the UTC offset associated with the phone number. For international phone numbers, this parameter returns the minimum UTC offset for the country associated with the phone number.
+          coordinates:
+            type: object
+            description: |
+              An object containing details about the geographical coordinates of the location where the phone number is registered.
+            properties:
+              latitude:
+                description: |
+                  Latitude specifies the North-South position of a point on the Earth’s surface. It is an angular measurement that ranges from 0° at the Equator, to 90° at the North Pole (and -90° at the South Pole). It is returned here as a value indicating the number of degrees of latitude of the location associated with the phone number, expressed in seven decimal digits, with five decimal places. 
+                example: '34.18264'
+              longitude:
+                description: |
+                  Longitude specifies the East-West position of a point on the Earth’s surface. It is an angle measured East or West from the <a href="https://en.wikipedia.org/wiki/Prime_meridian>Prime Meridian</a>—ranging from 0° at the Prime Meridian, to +180° Eastward and -180° Westward. It is returned here as a value indicating the number of degrees of longitude of the location associated with the phone number, expressed in eight decimal digits, with five decimal places.
+                example: '-118.30840'
+          metro_code:
+            type: string
+            description: |
+              A 4-digit string indicating the <a href="http://www.census.gov/population/estimates/metro-city/99mfips.txt">Primary Metropolitan Statistical Area (PMSA)</a> code for the location associated with the phone number (U.S. only). PMSA Codes are governed by the <a href="http://www.census.gov/">US Census Bureau</a>. This information is useful for large metropolitan areas that comprise several smaller cities. For example, the PMSA for Long Beach, California is Los Angeles County, which gives Long Beach the PMSA Code 4480.

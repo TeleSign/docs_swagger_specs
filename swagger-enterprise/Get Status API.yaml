@@ -1,0 +1,159 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: Get Status API
+  description: 'This spec contains details about the Get Status API. The Get Status API allows you to provide a reference ID for a transaction and manually retrieve details about that transaction. It is specifically for use with SMS Verify and Voice Verify. If you want to retrieve the status of transactions for other products, they have their own retrieval mechanisms. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+  '/verify/{reference_id}':
+    get:
+      summary: 'For use with SMS Verify and Voice Verify. This API allows you to retrieve the status of a transaction performed.'
+      description: 'The Get Status API allows you to provide a reference ID for a transaction and manually retrieve details about that transaction. It is specifically for use with SMS Verify and Voice Verify. If you want to retrieve the status of transactions for other products, they have their own retrieval mechanisms. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: reference_id
+          required: true
+          description: A unique identifier you can use to query the Get Status API and find out the status of your transaction.
+          type: string
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Codes are in the `code` parameter that comes back in the response.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getStatusResponse'
+        '400':
+          description: |
+            If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getStatusResponse'
+        '401':
+          description: |
+            If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. Codes are in the `code` parameter that comes back in the response.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getStatusResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -10001     | CustomerID/ReferenceID not found (returned when the reference ID given does not exist)          |
+            | -10004     | Reference ID expired     |
+            | -40004     | Resource Not Found       |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getStatusResponse'
+        '405':
+          description: |
+            The request method is known by the server but has been disabled and cannot be used.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -40005     | Method Not Allowed       |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getStatusResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -40008     | {product} exceeded transaction hard cap. Request denied.          |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getStatusResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+
+            | Error Code | Associated Text String   |
+            |------------|--------------------------|
+            | -90001     | System Unavailable, please try again later.  |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getStatusResponse'
+definitions:
+  getStatusResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: A unique identifier that you can use to retrieve information about a specific Voice or SMS transaction completed through App Verify.
+      sub_resource:
+        type: string
+        description: 'The subresource accessed for the request. For App Verify, the underlying sub resource requested is either call for Voice Verify or sms for SMS Verify.'
+      errors:
+        type: object
+        description: |
+          A JSON object that contains information on error conditions that might have resulted from the request, in an array of property-value pairs. If multiple errors occur, a pair is returned for each error. If no errors occur, then this array is empty. `errors`:[]
+        properties:
+          code:
+            type: string
+            description: |
+              A 1 to 5-digit error code (possibly negative) that indicates the type of error that occurred.
+          description:
+            type: string
+            description: A string that describes the type of error that occurred.
+      status:
+        type: object
+        description: |
+          An object containing details about the request status. 
+        properties:
+          code:
+            type: string
+            description: |
+              One of the status codes or error codes. You should code against these and not against HTTP response.
+          description:
+            type: string
+            description: |
+              Text describing the transaction status.
+          updated_on:
+            type: string
+            description: |
+              An <a href="http://www.ietf.org/rfc/rfc3339.txt">RFC 3339</a> timestamp indicating when the transaction status was updated.
+      call_forwarding:
+        type: object
+        description: |
+          The call forwarding object is only returned for transactions made using the call sub resource (Voice Verify). Specifies the action that you want TeleSign to perform if the phone number has Call Forwarding enabled. This object contains the following keys-
+        properties:
+          action:
+            type: string
+            description: A string value that indicates the action taken if the phone number was found to have Call Forwarding enabled. Possible values are FLAG and BLOCK.
+          call_forward:
+            type: string
+            description: |
+              A string value that indicates whether the phone number has Call Forwarding enabled. Possible values are FORWARDED, NOT_FORWARDED, UNSUPPORTED, and UNVAILABLE (if the Call Forwarding status could not be determined).
+      verify:
+        type: object
+        description: |
+          An object containing information about the verification code expected from the end user. This is only present for transactions that use sub resource call (Voice Verify).
+        properties:
+          code_state:
+            type: string
+            description: 'A string value that indicates the verification result. VALID, INVALID, and UNKNOWN. When the verification is still in progress, code_state is UNKNOWN.'
+          code_entered:
+            type: string
+            description: 'If the end user entered a code, what they entered is provided here.'

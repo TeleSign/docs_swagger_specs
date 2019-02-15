@@ -1,0 +1,458 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: Voice API
+  description: 'This spec contains details about the TeleSign Voice API. The TeleSign Voice API allows you to send alerts, notifications, reminders, marketing messages, and OTPs (one-time password) in a voice message. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+
+  '/voice':
+    post:
+      summary: Send a request that a voice message be sent to a specified phone number.
+      description: |-
+        Send a voice message (with a verification code if you wish), specify the type of message, what phase of the account lifecycle the message is being sent in, what language to speak the message in, and additional details about the transaction. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the Voice API: 
+
+        * Can be authenticated with [Basic](/api-reference/authentication/#basic-authentication) (easiest to implement) and [Digest](/api-reference/authentication/#digest-authentication) 
+        * Use `https://rest-ww.telesign.com/v1/voice` as the base endpoint 
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use Content-Type application/x-www-form-urlencoded in request headers 
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: phone_number
+          required: true
+          type: string
+          description: |
+            The end user's phone number with country code included. Avoid use of special characters and spaces.
+        - in: formData
+          name: message
+          required: true
+          type: string
+          description: |
+            Text of the message to be sent to the end user. You are limited to 1600 characters. If you send a very long message, TeleSign splits your message into separate parts. TeleSign recommends against sending messages that require multiple SMSes when possible.
+        - in: formData
+          name: message_type
+          required: true
+          type: string
+          description: |
+            This parameter specifies the traffic type being sent in the message. You can provide one of the following values -
+            * OTP (One time passwords)
+            * ARN (Alerts, reminders, and notifications)
+            * MKT (Marketing traffic)
+        - in: formData
+          name: voice
+          type: string
+          description: |-
+            The voice aparameter allows you to specify a voice to be used to speak your text to speech message. If you do not specify a voice, the default f-en-US is used. At this time, all TeleSign voices are female. Available options for this parameter include-
+
+            | Language                       | Language Tag |
+            |--------------------------------|--------------|
+            | Chinese (Hong Kong, Cantonese) | f-zh-HK      |
+            | Chinese (Mandarin)             | f-zh-CN      |
+            | Chinese (Taiwan)               | f-zh-TW      |
+            | Danish                         | f-da-DK      |
+            | Dutch                          | f-nl-NL      |
+            | English (Australian)           | f-en-AU      |
+            | English (UK)                   | f-en-GB      |
+            | English (US)                   | f-en-US      |
+            | English (Canadian)             | f-en-CA      |
+            | English (India)                | f-en-IN      |
+            | Finnish                        | f-fi-FI      |
+            | French                         | f-fr-FR      |
+            | French (Canadian)              | f-fr-CA      |
+            | German                         | f-de-DE      |
+            | Italian                        | f-it-IT      |
+            | Japanese                       | f-ja-JP      |
+            | Korean                         | f-ko-KR      |
+            | Norweigan                      | f-nb-NO      |
+            | Polish                         | f-pl-PL      |
+            | Portuguese (Brazil)            | f-pt-BR      |
+            | Portuguese (Europe)            | f-pt-PT      |
+            | Russian                        | f-ru-RU      |
+            | Spanish (Mexico)               | f-es-MX      |
+            | Spanish (Spain, Castilian)     | f-es-ES      |
+            | Spanish (Catalan)              | f-ca-ES      |
+            | Swedish                        | f-sv-SE      |
+        - in: formData
+          name: select_digits
+          type: string
+          description: |
+            A string of digits that can be up to 10 digits long with no repeats (0-9). Any digits in the string you provide are individually valid to accept. For example, '12' would mean you want the end user to be able to press 1 or 2. You would use this in conjunction with the message parameter, and in your message be sure to specify what each choice is for the end user. NOTE: Do NOT include the digit you want to use to play 'repeat this message' with. Use the repeat_digit parameter for that.
+        - in: formData
+          name: repeat_digit
+          type: string
+          description: |
+            A single digit provided as a string that you want the end user to be able to press in order to hear the message you put in the 'message' parameter again. The end user can press this digit three times and hear a message that you choose in the 'tts_repeat' parameter, followed by the original message you put in the 'message' parameter. (For example, if 'message' is Press 1 to confirm, 2 cancel, 3 to hear this again... if the end user presses 3, they get the message you put in for the 'tts_repeat' parameter followed by the message in the 'message' parameter.) The end user can repeat the message up to 3 times. If they try to repeat a fourth time, the system hangs up on them.
+        - in: formData
+          name: tts_message_n
+          type: string
+          description: |
+            A text to speech message to be played when the end user presses the appropriate digit. In the parameter name, the 'n' stands in for the digit. If you decided the end user could press 1 or 2, then you would ideally have a tts_message_1 and a tts_message_2, each with an associated message to play. The system hangs up after the message plays. It hangs up immediately if the end user presses a digit during play.
+        - in: formData
+          name: tts_repeat
+          type: string
+          description: 'This is the message that plays when the end user presses the digit you specified for the repeat_digit parameter. The end user can hear this message up to three times. If they try to hear it a fourth time, the system hangs up on them.'
+        - in: formData
+          name: prompt_message
+          type: string
+          description: 'This message is to be used in conjunction with `prompt_digit`. You provide a message to play, it is converted to text-to-speech and sent in a call and played for the end user. The message should contain the digit you want to press. For example, you might have the message Press 7 to continue. Make sure the digit in your message matches the digit you send for prompt_digit. If the end user presses the correct digit, then the message you have for the message parameter plays. If the end user does not press the correct digit, the follow up message does not play. Instead the message repeats. The end user can press the wrong digit up to three times in a row and the message repeats, on the third time the call hangs up. If the end user does not press any digit in the allotted time, the end user will hear the regular message repeat. If the end user does not press anything a second time, the call hangs up. All messages use the same voice tag if you choose to include one.'
+        - in: formData
+          name: prompt_digit
+          type: string
+          description: 'This digit is to be used in conjunction with `prompt_message`. Provide a single digit 0-9 that you want the end user to press. After playing the prompt message, the system will wait and give the end user two chances to press the correct digit. If they do, the message in the message parameter plays. All messages use the same voice tag if you choose to include one.'
+        - in: formData
+          name: caller_id
+          type: string
+          description: |
+            This parameter allows you to set a phone number as caller ID for a VOice API message sent to your end users. In order to use a specific caller ID, you must purchase a phone number from TeleSign. This can be done with your account at portal.telesign.com. Be aware that 100% preservation of a caller ID value is not guaranteed. TeleSign or a terminating operator may override the caller ID value that your end user will receive in order to improve delivery quality or follow local Telecom regulations in particular countries.
+        - in: formData
+          name: account_lifecycle_event
+          type: string
+          description: |
+            This parameter allows you to indicate what phase of the lifecycle you are in when you send a transaction. The options for this parameter are - 
+            * create - For the creation of a new account.
+            * sign-in - For when an end user signs in to their account.
+            * transact - For when an end user completes a transaction within their account.
+            * update - For when an update is performed, such as an update of account information or similar.
+            * delete - For when an account is deleted. 
+        - in: formData
+          name: external_id
+          type: string
+          description: You can mark each of your requests with your own identifier. This identifier is returned as part of a delivery receipt (DLR) callback.
+        - in: formData
+          name: originating_ip
+          type: string
+          description: |
+            Your end user's IP Address (do not send your own IP address). IPv4 and IPv6 are supported. For IPv4, the value must be in the format defined by the Internet Engineering Task Force (IETF) in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc791">Internet Protocol</a>. For IPv6, the value must be in the format defined by the IETF in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc4291#section-2.2">IP Version 6 Addressing Architecture</a>. 
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+                       
+            | Status Code | Associated Text String | Description                                      |
+            |-------------|------------------------|--------------------------------------------------|
+            | 100         | Call answered          | The call was answered by the end user or voicemail. |
+            | 101         | Not answered           | No one answered the call. |
+            | 104         | Wrong/invalid phone    | The phone number is not correctly formatted in some way, so a call cannot be placed.            |
+            | 106         | Call failed         | The call did not go through. | 
+            | 107         | Line busy           |
+            | 130         | Call blocked by TeleSign       | TeleSign blocks a message if it is being sent to  a phone number that is on a global blocklist.    |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '201':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+            | Status Code | Associated Text String | Description                                      | 
+            |-------------|------------------------|--------------------------------------------------|
+            | 103         | Call in progress       | The call is in progress.                         |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             | Status Code | Associated Text String | 
+             |-------------|------------------------|
+             | 10031       | Not Allowed Host | 
+             | 10032       | Message blocked by TeleSign               | 
+             | 10033       | Unverified phone_number requested for trial account.               | 
+             | 10034       | Call with declared type blocked in country requested              | 
+             | 10035       | The requested API host is not allowed for this `customer_id` |
+             | 11000       | Invalid value for parameter phone_number | 
+             | 11001       | Invalid country code for parameter phone_number           | 
+             | 11003       | Invalid value for parameter account_lifecycle_event| 
+             | 11004       | Invalid value for parameter callback_url | 
+             | 11005       | Invalid value for parameter customer_id  | 
+             | 11009       | Invalid value for parameter message      | 
+             | 11010       | Invalid value for parameter originating_ip         | 
+             | 11011       | Invalid value for parameter reference_id | 
+             | 11017       | Invalid value for parameter device_id    | 
+             | 11018       | Invalid value for parameter voice | 
+             | 12000       | Missing required parameter phone_number |
+             | 12009       | Missing required parameter message      | 
+             | 12017       | Missing required parameter message_type | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '401':
+          description: |-
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             | Status Code | Associated Text String | 
+             |-------------|------------------------|
+             | 10008       | Invalid signature      | 
+             | 10009       | Invalid value for parameter message      | 
+             | 10010       | Invalid value for parameter originating_ip         | 
+             | 10011       | Invalid value for parameter reference_id | 
+             | 10012       | This feature is not  enabled for this CustomerID             |
+             | 10013       | Invalid Request. CustomerID Account Not  Not Found              |
+             | 10014       | Invalid source IP address                |
+             | 10015       | Invalid customer ID    |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '402':
+          description: |
+            Payment Required. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10030       | Insufficient funds in prepaid wallet         |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10017       | Customer ID / Reference ID not found           |
+            | 10036       | Reference ID expired   |      
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10019       | Rate Limit Exceeded    |
+            | 10020       | Messaging exceeded transaction hard cap. Request denied.        |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '500':
+          description: |
+            Invalid Transaction, transaction not attempted.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postVoiceResponse'
+  '/voice/{reference_id}':
+    get:
+      summary: Used to get the status of an SMS (messaging) transaction.
+      description: |-
+        By passing the reference ID for a transaction in the body of your request, you can receive a response containing details about that transaction. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the Voice API: 
+        * Can be authenticated with [Basic](/api-reference/authentication/#basic-authentication) (easiest to implement) and [Digest](/api-reference/authentication/#digest-authentication).
+        * Use https://rest-ww.telesign.com/v1/voice as the base endpoint
+        * Accept only UTF-8 encoded unicode characters as inputs
+        * Use Content-Type application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: reference_id
+          in: path
+          required: true
+          description: A unique identifier you can use to query the Messaging API and find out the status of your transaction.
+          type: string
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             
+             | Status Code | Associated Text String | Description                                       |
+             |-------------|------------------------|---------------------------------------------------|
+             | 100         | Call answered          | The call was answered by the end user or voicemail.                                        |
+             | 101         | Not answered           | No one answered the call.                         |
+             | 103         | Call in progress       | The call is currently happening.                  |
+             | 104         | Wrong/invalid phone number   | The phone number is not correctly formatted in some way, so a call cannot be placed.             |
+             | 106         | Call failed            | The call did not go through. Typically this occurs when TeleSign's upstream providers fail to complete the call. Sometimes retrying will work.  |
+             | 107         | Line busy              | The line was busy when the call tried to reach the end user's device.                            |
+             | 130         | Call blocked by TeleSign       | TeleSign blocks a message if it is being sent to a phone number that is on a global blocklist.     | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             | Status Code | Associated Text String | 
+             |-------------|------------------------|
+             | 10032       | Message blocked by TeleSign               | 
+             | 10033       | Unverified phone_number requested for trial account.               | 
+             | 10034       | Call with declared type blocked in country requested              | 
+             | 11000       | Invalid value for parameter phone_number | 
+             | 11001       | Invalid country code for parameter phone_number           | 
+             | 11003       | Invalid value for parameter account_lifecycle_event | 
+             | 11005       | Invalid value for parameter customer_id  | 
+             | 11009       | Invalid value for parameter message      | 
+             | 11010       | Invalid value for parameter originating_ip         | 
+             | 11011       | Invalid value for parameter reference_id | 
+             | 11017       | Invalid value for parameter device_id    | 
+             | 12000       | Missing required parameter phone_number |
+             | 12009       | Missing required parameter message      | 
+             | 12017       | Missing required parameter message_type | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+             | Status Code | Associated Text String | 
+             |-------------|------------------------|
+             | 10008       | Invalid signature      | 
+             | 10009       | Invalid value for parameter message      | 
+             | 10010       | Invalid value for parameter originating_ip         | 
+             | 10011       | Invalid value for parameter reference_id | 
+             | 10012       | This feature is not enabled for this CustomerID             |
+             | 10013       | Invalid Request. CustomerID Account Not Found              |
+             | 10014       | Invalid source IP address                |
+             | 10015       | Invalid customer ID    |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+        '402':
+          description: |
+            Payment Required. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10030       | Insufficient funds in prepaid wallet         |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+        '404':
+          description: |
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10017       | Customer ID / Reference ID not found           |
+            | 10036       | Reference ID expired   |      
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10019       | Rate Limit Exceeded    |
+            | 10020       | Messaging exceeded transaction hard cap. Request denied.        |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+        '500':
+          description: |
+            Invalid Transaction, transaction not attempted.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/getVoiceResponse'
+definitions: 
+
+  postVoiceResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service request. The value is unique to each web service request, is randomly generated by TeleSign, and is returned in the response message immediately following the web service request.
+      status:
+        type: object
+        required:
+          - code
+          - description
+          - updated_on
+        properties:
+          code:
+            type: string
+            description: |
+              This code describes the status of your transaction. You can use this to programmatically respond. You are returned two types of codes, either status codes or error codes. 
+          description:
+            type: string
+            description: A text description of the status code.
+          updated_on:
+            type: string
+            description: This is a timestamp showing when your transaction status was updated last.
+      voice:
+        type: object
+        properties:
+          user_input:
+            type: string
+            description: |
+              If the end user answers a voice call and presses on the keypad after the message plays, you will see this parameter and it will display whatever the end user pressed. If the end user presses multiple digits on the keypad, only the last digit is returned. Additionally, if the end user presses the keypad before the message completes, that information will not be recorded at all.
+          caller_id:
+            type: string
+            description: |
+              If you chose a caller id, this parameter comes back in the response and lists the caller_id that you chose.
+  getVoiceResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service request. The value is unique to each web service request, is randomly generated by TeleSign, and is returned in the response message immediately following the web service request.
+      status:
+        type: object
+        required:
+          - code
+          - description
+          - updated_on
+        properties:
+          code:
+            type: string
+            description: |
+              This code describes the status of your transaction. You can use this to programmatically respond. You are returned two types of codes, either status codes or error codes. 
+          description:
+            type: string
+            description: A text description of the status code.
+          updated_on:
+            type: string
+            description: This is a timestamp showing when your transaction status was updated last.
+      voice:
+        type: object
+        properties:
+          user_input:
+            type: string
+            description: |
+              If the end user answers a voice call and presses on the keypad after the message plays, you will see this parameter and it will display whatever the end user pressed. If the end user presses multiple digits on the keypad, only the last digit is returned. Additionally, if the end user presses the keypad before the message completes, that information will not be recorded at all.
+          caller_id:
+            type: string
+            description: |
+              If you chose a caller id, this parameter comes back in the response and lists the caller_id that you chose.

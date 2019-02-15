@@ -1,0 +1,607 @@
+swagger: '2.0'
+info:
+  version: '1'
+  title: PhoneID API with Add-ons
+  description: 'This version of the PhoneID API uses application/json to send and receive information, and includes add-ons.'
+schemes:
+  - https
+host: rest-ww.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+  '/phoneid/{complete_phone_number}':
+    post:
+      description: 'Enter a phone number to receive detailed information about carrier, location, and other details. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.'
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: complete_phone_number
+          required: true
+          description: |
+            The phone number you want to collect information about. Provide the entire phone number, including the country code, with no spaces or special characters.
+          type: string
+        - in: body
+          name: request_body
+          description: |
+            This is a container for everything you can send in the body of your request.
+          schema:
+            type: object
+            properties:
+              account_lifecycle_event:
+                type: string
+                description: |
+                  The account lifecycle event parameter allows you to send information about what stage an end user was in when you retrieved information about their phone number. Acceptable values for this parameter are - create - For the creation of a new account, sign-in - For when an end user signs in to their account, transact - For when an end user completes a transaction within their account, update - For when an update is performed, such as an update of account information or  similar, and delete - For when an account is deleted. 
+              originating_ip:
+                type: string
+                description: |
+                  Your end user's IP address (do not send your own Ip address). IPv4 and IPv6 are supported. For IPv4, the value must be in the format defined by the Internet Engineering Task Force (IETF) in the Internet-Draft doucment titled <a href="https://tools.ietf.org/html/rfc791">Internet Protocol</a>. For IPv6, the value must be in the format defined by the IETF in the Internet-Draft document titled <a href="https://tools.ietf.org/html/rfc4291#section-2.2">IP Version 6 Addressing Arcitecture</a>.
+              addons:
+                type: object
+                description: |
+                  You must have you Technical Account Manager enable this feature for use. The addons parameter allows you to receive information returned from Contact, Contact Plus, Contact Match, or Number Deactivation, depending on which add-ons you enable. You receive add-on information back along with standard PhoneID information.
+                properties:
+                  contact:
+                    type: object
+                    description: |
+                      Using this for the Contact add-on allows you to retrieve the name and address associated with the phone number you submit, without requesting explicit consent from your end user. Information included in the response is the first name, last name, street address, city, state (or province), country, and zip code. If you wish to use it as Contact Plus, then you must obtain explicit consent from your end user. You cannot see this add-on work in the API explorer. 
+                    properties:
+                      billing_postal_code:
+                        type: string
+                        description: |
+                          This field is required if you want to use Contact Plus. If you do not include this, you will get back Contact data. If you do include this, you get back Contact Plus data. 
+                  contact_match:
+                    type: object
+                    description: |
+                      Contact Match is an optional add-on offered as part of the PhoneID API. It allows you to compare a name and address for a submitted phone number in your request with a name and address on file with the carrier and return a score referred to as a match score that tells you how close a match was found. 
+                    properties:
+                      first_name:
+                        type: string
+                        description: The first name of the contact you want a match for.
+                      last_name:
+                        type: string
+                        description: The last name of the contact you want a match for.
+                      address:
+                        type: string
+                        description: 'The first line of the address you want to match for. By first line, the line containing the street is meant.'
+                      city:
+                        type: string
+                        description: The city for the address you want a match for.
+                      postal_code:
+                        type: string
+                        description: The postal/zip code for the address you want a match for. The first five digits only.
+                      state:
+                        type: string
+                        description: The state for the address you want a match for.
+                      country:
+                        type: string
+                        description: The country for the address you want a match for.
+                  device_info:
+                    type: object
+                    description: |
+                      Use this add-on to receive phone manufacturer and model to detect fraud or understand the value or risk of the device holder and adjust content and marketing strategies per device. To use this in the API explorer, just set it equal to '{}'.
+                  number_deactivation:
+                    type: object
+                    description: |
+                      The Number Deactivation add-on allows you to find out whether a phone number has been deactivated, when it was deactivated, and by which carrier the phone number was deactivated based on carriers' phone number data and TeleSign's proprietary analysis. This information is returned in addition to the standard PhoneID API information. To use this in the API explorer, just set it equal to '{}'.
+                  subscriber_status:
+                    type: object
+                    description: |
+                      Using this add-on allows you to retrieve information about a subscriber. You can see what kind of contract they have, how long they've had their account, whether they're active, and what kind of account they have. To use this in the API explorer, just set it equal to '{}'.
+      responses:
+        '200':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+                       
+            | Status Code | Associated Text String | Description                                      |
+            |-------------|------------------------|--------------------------------------------------|
+            | 300         | Transaction successfully completed           | The system was able to obtain all of the requested data for PhoneID.                      |
+            | 301         | Transaction partially completed   | The system was able to obtain some of the data for PhoneID, but not all of it.                  |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+              | Status Code | Associated Text String | 
+              |-------------|------------------------|
+              | 10032       | Message blocked by TeleSign               | 
+              | 10033       | Unverified phone_number requested for trial account.               | 
+              | 11000       | Invalid value for parameter phone_number | 
+              | 11001       | Invalid country code for parameter phone_number           | 
+              | 11003       | Invalid value for parameter account_lifecycle_event | 
+              | 11005       | Invalid value for parameter customer_id  | 
+              | 11010       | Invalid value for parameter originating_ip         | 
+              | 11011       | Invalid value for parameter reference_id | 
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '401':
+          description: |
+            Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
+
+             | Status Code | Associated Text String | 
+             |-------------|------------------------|
+             | 10008       | Invalid signature     | 
+             | 10009       | Invalid value for parameter message      | 
+             | 10010       | Invalid value for parameter originating_ip         | 
+             | 10011       | Invalid value for parameter reference_id | 
+             | 10012       | This feature is not enabled for this CustomerID             |
+             | 10013       | Invalid Request. CustomerID Account  Not Found              |
+             | 10014       | Invalid source IP address                |
+             | 10015       | Invalid customer ID    |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '402':
+          description: |
+            Payment Required. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10030       | Insufficient funds in prepaid wallet         |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '404':
+          description: |-
+            Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10017       | Customer ID / Reference ID not found           |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '429':
+          description: |
+            Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+            | Status Code | Associated Text String | 
+            |-------------|------------------------|
+            | 10019       | Rate Limit Exceeded    |
+            | 10020       | PhoneId Standard exceeded transaction hard cap. Request denied.                |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '500':
+          description: |
+            Invalid Transaction, transaction not attempted.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+        '503':
+          description: |
+            Service Unavailable, system unavailable, try again.
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postPhoneIdResponse'
+definitions:
+  postPhoneIdResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service requests. The value is unique to each web service request, is randomly generated by TeleSign, and is returned in the response message immediately following the web service request. 
+      phone_type:
+        type: object
+        description: |
+          An object containing details about the phone type. 
+        properties:
+          code:
+            type: string
+            description: |
+              One of the <a href="https://enterprise.telesign.com/docs/codes-languages-and-time-zones#section-phone-type-codes">phone type codes</a>.
+          description:
+            type: string
+            description: |
+              Text describing the phone type. 
+      contact:
+        type: object
+        description: |
+          You will only see this in your response if you used the contact or contact plus add-on.
+        properties:
+          address1:
+            type: string
+            description: The name of the street for the address.
+          address2:
+            type: string
+            description: Unit or Suite number for the address
+          address3:
+            type: string
+            description: 'Town, City, or State'
+          address4:
+            type: string
+            description: Postal Code
+          city:
+            type: string
+            description: The city where the address is located.
+          country:
+            type: string
+            description: The country where the address is located.
+          email_address:
+            type: string
+            description: Email address of the owner of the phone number.
+          first_name:
+            type: string
+            description: The first name of the person associated with the address.
+          last_name:
+            type: string
+            description: The last name of the person associated with the address.
+          state_province:
+            type: string
+            description: State or province where the address is located.
+          zip_postal_code:
+            type: string
+            description: |
+              The postal code for the owner of the phone.
+          status:
+            type: object
+            description: This object displays a status specific to the add-on.
+            properties:
+              code:
+                type: string
+                description: A code that describes whether the add-on worked or not.
+              description:
+                type: string
+                description: |-
+                  A brief description telling you what the code means.
+
+                    2800 - Request successfully completed.
+
+                   2801 - Invalid Request addons parameter {parameter_name} 
+
+                   2802 - number_deactivation add-on temporarily unavailable
+
+                     2803 - Phone number out of number_deactivation add-on coverage. 
+
+                    2804 - Phone number not applicable in number_deactivation add-on. 
+
+                    2805 - No number_deactivation add-on information for phone_number. 
+
+                    2806 - number_deactivation add-on is not enabled. 
+
+                    2807 - Some parameters submitted in the request are not valid. 
+
+                   
+      contact_match:
+        type: object
+        description: |
+          You will only see this in your response if you used the contact_match add-on. 
+        properties:
+          address_score:
+            type: integer
+            description: |
+              A score from 0-100 showing you how close a match the address information you sent is to what is on file. It is recommended that scores greater than or equal to 90 be considered a 'pass' meaning it is enough of a match for validation. If you receive a score of -1 it means the match was not available.
+          first_name_score:
+            type: integer
+            description: |
+              A score from 0-100 showing you how close a match the first name information you sent is to what is on file. It is recommended that scores greater than or equal to 90 be considered a 'pass' meaning it is enough of a match for validation. If you receive a score of -1 it means the match was not available.
+          last_name_score:
+            type: integer
+            description: |
+              A score from 0-100 showing you how close a match the last name information you sent is to what is on file. It is recommended that scores greater than or equal to 90 be considered a 'pass' meaning it is enough of a match for validation. If you receive a score of -1 it means the match was not available. 
+          status:
+            type: object
+            description: This object displays a status specific to the add-on.
+            properties:
+              code:
+                type: string
+                description: A code that describes whether the add-on worked or not.
+              description:
+                type: string
+                description: |-
+                  A brief description telling you what the code means.
+
+                    2800 - Request successfully completed.
+
+                   2801 - Invalid Request addons parameter {parameter_name} 
+
+                   2802 - number_deactivation add-on temporarily unavailable
+
+                     2803 - Phone number out of number_deactivation add-on coverage. 
+
+                    2804 - Phone number not applicable in number_deactivation add-on. 
+
+                    2805 - No number_deactivation add-on information for phone_number. 
+
+                    2806 - number_deactivation add-on is not enabled. 
+
+                    2807 - Some parameters submitted in the request are not valid. 
+      device_info:
+        type: object
+        description: |
+          You will only see this in your response if you used the device_info add-on. 
+        properties:
+          make:
+            type: string
+            description: |
+              A string indicating the manufacturer (the brand) of the device associated with the mobile number. Coverage - Mobile phones. USA - AT&T, Sprint, T-Mobile. Canada - Bell, Rogers, Telus. India - Vodafone.
+          model:
+            type: string
+            description: |
+              A string indicating the model of the device associated with the mobile number. Mobile phones. USA - AT&T, Sprint, T-Mobile. Canada - Bell, Rogers, Telus. India - Vodafone.
+          imei:
+            type: string
+            description: |
+              The international mobile equipment identity (IMEI) for the device associated with the mobile number. An IMEI is a 15 digit number unique to each device, but in the response, the hashed value is returned up to 120 characters. Hashed IMEI value up to 120 characters. Mobile phones. USA - AT&T, T-Mobile, Verizon. Canada - Bell, Rogers, Telus.
+      number_deactivation:
+        type: object
+        description: |
+          You will only see this in your response if you used the number_deactivation add-on. 
+        properties:
+          last_carrier_name:
+            type: string
+            description: |
+              The name of the carrier most recently associated with the number.
+          last_deact_date:
+            type: string
+            description: |
+              If the number was deactivated, this displays the date the it was last deactivated. 
+          status:
+            type: object
+            description: This object displays a status specific to the add-on.
+            properties:
+              code:
+                type: string
+                description: A code that describes whether the add-on worked or not.
+              description:
+                type: string
+                description: |-
+                  A brief description telling you what the code means.
+
+                    2800 - Request successfully completed.
+
+                   2801 - Invalid Request addons parameter {parameter_name} 
+
+                   2802 - number_deactivation add-on temporarily unavailable
+
+                     2803 - Phone number out of number_deactivation add-on coverage. 
+
+                    2804 - Phone number not applicable in number_deactivation add-on. 
+
+                    2805 - No number_deactivation add-on information for phone_number. 
+
+                    2806 - number_deactivation add-on is not enabled. 
+
+                    2807 - Some parameters submitted in the request are not valid. 
+      subscriber_status:
+        type: string
+        description: |
+          You will only see this if you used the subscriber_status add-on. 
+        properties:
+          account_type:
+            type: string
+            description: |
+              A string indicating whether the subscriber is an 'individual', 'business', 'government', or 'other'. Coverage includes all phone types. USA - AT&T, T-Mobile, Verizon. Canada - Bell and Telus
+          account_tenure_max:
+            type: string
+            description: |
+              A string indicating the maximum amount of time in months the subscriber may have had their account. Coverage includes all phone types. USA - AT&T, Sprint, T-Mobile, Verizon.
+          account_tenure_min:
+            type: string
+            description: |
+              A string indicating the minimum amount of time in months the subscriber may have had their account.
+          primary_account_holder:
+            type: string
+            description: |
+              A boolean value indicating whether the phone number is the primary phone number of the account or not. Coverage includes mobile phones. USA - AT&T, Sprint, T-Mobile, Verizon. Canada - Telus.
+          account_status:
+            type: string
+            description: |
+              A string indicating whether an account is 'active' or 'suspended` or 'deactivated'. Coverage includes all phone types. USA - AT&T, Sprint, T-Mobile, Verizon. Canada - Bell, Rogers, Telus. India - Vodafone. 
+          contract_type:
+            type: string
+            description: |
+              A string indicating whether an account is 'postpaid' (an account where service is provided by prior arrangement with a mobile network operator, and the subscriber pays at the end of each month) or 'prepaid' (an account where the subscriber pays for the service up front). Coverage includes all phone types. USA - AT&T, Sprint, T-Mobile, Verizon. Canada - Bell, Rogers, Telus. India - Vodafone.
+          status:
+            type: object
+            description: |
+              An object containing details about the success or failure of your request. 
+            properties:
+              code:
+                type: string
+                description: |
+                  A status or error code describing what happened after your request.
+              description:
+                type: string
+                description: |
+                  A brief description of what the error or status code means. 
+                                    A brief description telling you what the code means.
+
+                    2800 - Request successfully completed.
+
+                   2801 - Invalid Request addons parameter {parameter_name} 
+
+                   2802 - number_deactivation add-on temporarily unavailable
+
+                     2803 - Phone number out of number_deactivation add-on coverage. 
+
+                    2804 - Phone number not applicable in number_deactivation add-on. 
+
+                    2805 - No number_deactivation add-on information for phone_number. 
+
+                    2806 - number_deactivation add-on is not enabled. 
+
+                    2807 - Some parameters submitted in the request are not valid. 
+      status:
+        type: object
+        description: |
+          An object containing details about the request status. This is for a request to the PhoneID API 
+        properties:
+          code:
+            type: string
+            description: |
+              One of the <a href="https://enterprise.telesign.com/docs/phoneid-api#section-status-codes">status codes</a> or <a href="https://enterprise.telesign.com/docs/codes-languages-and-time-zones#section-http-response-status-codes">error codes</a>.
+          description:
+            type: string
+            description: |
+              Text describing the transaction status.
+          updated_on:
+            type: string
+            description: |
+              An <a href="http://www.ietf.org/rfc/rfc3339.txt">RFC 3339</a> timestamp indicating when the transaction status was updated. 
+      numbering:
+        type: object
+        description: |
+          An object containing details about the numbering attributes of the specified phone number. 
+        properties:
+          original:
+            type: object
+            description: |
+              An object containing details about the original phone number passed to TeleSign's PhoneID API. 
+            properties:
+              phone_number:
+                type: string
+                description: |
+                  The base phone number. This is the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              complete_phone_number:
+                type: string
+                description: |
+                  The base phone number prefixed with the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              country_code:
+                type: string
+                description: |
+                  A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for the United Kingdom is 44.
+          cleansing:
+            type: object
+            description: |
+              An object containing details about how the phone number was cleansed. Phone cleansing corrects common formatting issues in submitted phone numbers.
+            properties:
+              call:
+                type: object
+                description: |
+                  An object containing cleansing details about a phone number used for receiving voice calls. 
+                properties:
+                  cleansed_code:
+                    type: string
+                    description: |
+                      One of the [phone number cleansing codes](/api-reference/codes-languages-and-time-zones/shared#phone-number-cleansing-codes) describing the cleansing operation TeleSign performed on the phone number. The default value is 100 (no changes were made to the phone number).
+                  country_code:
+                    type: string
+                    description: |
+                      A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for United Kingdom is 44.
+                  max_length:
+                    type: string
+                    description: |
+                      The maximum number of digits allowed for phone numbers with this particular country dialing code.
+                  min_length:
+                    type: string
+                    description: |
+                      The minimum number of digits allowed for phone numbers with this particular country dialing code.
+                  phone_number:
+                    type: string
+                    description: |
+                      The base phone number. This is simply the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+              sms:
+                type: object
+                description: |
+                  An object containing cleansing details about a phone number used for receiving text messages.
+                properties:
+                  cleansed_code:
+                    type: string
+                    description: |
+                      One of the [phone number cleansing codes](/api-reference/codes-languages-and-time-zones/shared#phone-number-cleansing-codes) describing the cleansing operation TeleSign performed on the phone number. The default value is 100 (no changes were made to the phone number).
+                  country_code:
+                    type: string
+                    description: |
+                      A 1, 2, or 3-digit number representing the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes). For example, the country dialing code for both the U.S.A. and Canada is 1, and the country dialing code for United Kingdom is 44.
+                  max_length:
+                    type: string
+                    description: |
+                      The maximum number of digits allowed for phone numbers with this particular country dialing code.
+                  min_length:
+                    type: string
+                    description: |
+                      The minimum number of digits allowed for phone numbers with this particular country dialing code.
+                  phone_number:
+                    type: string
+                    description: |
+                      The base phone number. This is simply the phone number without the [country dialing code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes).
+      location:
+        type: object
+        description: |
+          An object containing geographical location information associated with the phone number. 
+        properties:
+          city:
+            type: string
+            description: |
+              A string specifying the name of the city associated with the phone number.
+          county:
+            type: string
+            description: |
+              A string specifying the name of the <a href="https://www.census.gov/geo/reference/county-adjacency.html">County</a> (or Parish) associated with the phone number (U.S. only).
+          state:
+            type: string
+            description: |
+              The 2-letter <a href="http://pe.usps.com/text/pub28/28apb.htm">state abbreviation code</a> of the state (province, district, or territory) associated with the phone number (North America only).
+          zip:
+            type: string
+            description: |
+              The 5-digit United States Postal Service <a href="https://www.usps.com/nationalpremieraccounts/findzipcodes.htm">Zip Code</a> associated with the phone number (U.S. only).
+          country:
+            type: object
+            description: |
+              An object containing details about the country associated with the phone number. 
+            properties:
+              iso2:
+                type: string
+                description: |
+                  The ISO 3166-1 2-letter [country code](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes) associated with the phone number. 
+              iso3:
+                type: string
+                description: |
+                  The ISO 3166-1 3-letter country code associated with the phone number. 
+              name:
+                type: string
+                description: |
+                  The [country name](/api-reference/codes-languages-and-time-zones/shared#country-codes-and-dialing-codes) associated with phone number.
+          time_zone:
+            type: object
+            description: |
+              An object containing details about the [time zone](/api-reference/codes-languages-and-time-zones/shared#time-zones) associated with the phone number. For maximum and minimum UTC offsets, they are specified in units of hours, and range from -12 to +14. For positive numbers, the plus sign (+) may not be returned. Additional offsets due to Daylight Savings Time or Summer Time are not considered. For example, Russia, which spans 11 time zones, has a minimum UTC offset of +2, and a maximum of +12. 
+            properties:
+              name:
+                type: string
+                description: |
+                  A string identifying the <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">Time Zone Name (TZ)</a> associated with the phone number (U.S. only).
+                example: America/Los_Angeles
+              utc_offset_max:
+                type: string
+                description: |
+                  For international phone numbers, this parameter returns the maximum UTC offset for the country associated with the phone number. For U.S. domestic phone numbers, this parameter returns the same result as utc_offset_min.
+              utc_offset_min:
+                type: string
+                description: |
+                  For U.S. domestic phone numbers, this parameter returns the UTC offset associated with the phone number. For international phone numbers, this parameter returns the minimum UTC offset for the country associated with the phone number.
+          coordinates:
+            type: object
+            description: |
+              An object containing details about the geographical coordinates of the location where the phone number is registered.
+            properties:
+              latitude:
+                description: |
+                  Latitude specifies the North-South position of a point on the Earth�s surface. It is an angular measurement that ranges from 0� at the Equator, to 90� at the North Pole (and -90� at the South Pole). It is returned here as a value indicating the number of degrees of latitude of the location associated with the phone number, expressed in seven decimal digits, with five decimal places. 
+                example: 34.18264
+              longitude:
+                description: |
+                  Longitude specifies the East-West position of a point on the Earth�s surface. It is an angle measured East or West from the <a href="https://en.wikipedia.org/wiki/Prime_meridian>Prime Meridian</a>�ranging from 0� at the Prime Meridian, to +180� Eastward and -180� Westward. It is returned here as a value indicating the number of degrees of longitude of the location associated with the phone number, expressed in eight decimal digits, with five decimal places.
+                example: -118.3084
+          metro_code:
+            type: string
+            description: 'A 4-digit string indicating the <a href="http://www.census.gov/population/estimates/metro-city/99mfips.txt">Primary Metropolitan Statistical Area (PMSA)</a> code for the location associated with the phone number (U.S. only). PMSA Codes are governed by the <a href="http://www.census.gov/">US Census Bureau</a>. This information is useful for large metropolitan areas that comprise several smaller cities. For example, the PMSA for Long Beach, California is Los Angeles County, which gives Long Beach the PMSA Code 4480.'
