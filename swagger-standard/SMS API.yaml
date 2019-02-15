@@ -1,0 +1,359 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: TeleSign SMS API
+  description: 'This spec contains details about the SMS API. You can send alerts, notifications, reminders, marketing messages, and OTP (one-time password) messages using SMS.'
+schemes:
+  - https
+host: rest-api.telesign.com
+basePath: /v1
+securityDefinitions:
+  UserSecurity:
+    type: basic
+paths:
+  /messaging:
+    post:
+      summary: Send a request that a text message be sent to a specified phone number.
+      description: |-
+        Send a message (with a verification code if you wish), specify the type of message, what phase of the account lifecycle the message is being sent in, and additional details about the transaction. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would.
+
+        All requests submitted for the SMS API: 
+        * Can be authenticated with [Basic](/api-reference/authentication#basic) (easiest to implement) and [Digest](/api-reference/authentication#digest).
+        * Use `https://rest-api.telesign.com/v1/messaging` as the base endpoint
+        * Accept only UTF-8 encoded unicode characters as inputs.
+        * Use Content-Type application/x-www-form-urlencoded in request headers
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: phone_number
+          type: string
+          required: true
+          description: |
+            The end user's phone number with country code included. Avoid use of special characters and spaces.
+        - in: formData
+          name: message
+          type: string
+          required: true
+          description: |
+            Text of the message to be sent to the end user. You are limited to 1600 characters. If you send a very long message, TeleSign splits your message into separate parts. TeleSign recommends against sending messages that require multiple SMSes when possible.
+        - in: formData
+          name: message_type
+          required: true
+          type: string
+          description: |
+            This parameter specifies the traffic type being sent in the message. You can provide one of the following values -
+            * OTP (One time passwords)
+            * ARN (Alerts, reminders, and notifications)
+            * MKT (Marketing traffic)
+        - in: formData
+          name: account_lifecycle_event
+          type: string
+          description: |
+            This parameter allows you to indicate what phase of the lifecycle you are in when you send a transaction. The options for this parameter are -
+            * create - For the creation of a new account.
+            * sign-in - For when an end user signs in to their account.
+            * transact - For when an end user completes a transaction within their account.
+            * update - For when an update is performed, such as an update of account information or similar.
+            * delete - For when an account is deleted.
+        - in: formData
+          name: sender_id
+          type: string
+          description: |
+            This parameter allows you to set a specific sender ID to be used on an SMS message sent to the end user. In order to use a specific sender ID, TeleSign must whitelist your selected sender ID values. Be aware that 100% preservation of a sender ID value is not guaranteed. TeleSign may override the sender ID value that your end user will receive in order to improve delivery quality or follow SMS regulations in particular countries. In order to use this feature, you must contact TeleSign Support and have them enable it for you.
+        - in: formData
+          name: external_id
+          type: string
+          description: You can mark each of your requests with your own identifier. This identifier is returned as part of a delivery receipt (DLR) callback.
+        - in: formData
+          name: originating_ip
+          type: string
+          description: |
+            Your end user's IP address (do not send your own IP address). This value must be in the format defined by the Internet Engineering Task Force (IETF) in the Internet-Draft document titled [Textual Representation of IPv4 and IPv6 Addresses](https://tools.ietf.org/html/rfc4291#section-2.2).
+      responses:
+        '201':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+             | Status Code | Associated Text String | Description                                      |
+             |-------------|------------------------|--------------------------------------------------|
+             | 200         | Delivered to handset   | The SMS was delivered to the end user's phone. (Final)                      |
+             | 203         | Delivered to gateway   | The SMS was delivered to the gateway. If the gateway responds with further information (including successful delivery to handset or delivery failure), the status is updated. (Intermediate)                                   |
+             | 207         | Error delivering SMS to handset (reason unknown)  | The SMS could not be delivered to the end user's handset for an unknown reason. (Final)           |
+             | 210         | Temporary phone error  | The SMS could not be delivered to the handset due to a temporary error with the phone. Examples - phone is turned off, not enough memory to store the message. (Final)                             |
+             | 211         | Permanent phone error  | The SMS could not be delivered to the handset due to a permanent error with the phone. For example, the phone is incompatible with SMS, or illegally registered on the network. This can happen when a phone number is blacklisted, or is incorrectly provisioned. (Final)                             |
+             | 220         | Gateway/network cannot route message | The network cannot route the message to the handset. (Final)                                 |
+             | 221         | Message expired before delivery | The message was queued by the mobile provider and timed out before it could be delivered to the handset. (Final)                             |
+             | 222         | SMS not supported      | SMS is not supported by this phone, carrier, plan, or user.                                   |
+             | 230         | Message blocked by TeleSign    | TeleSign blocks a message if it is being sent to a phone number that is on a global blocklist.    |
+             | 231         | Invalid/unsupported    | The content of the message is not supported.     |
+             | 237         | Message blocked in requested country    | You requested that messages in a specific country be blocked, and the message was being sent to this country.                                    |
+             | 238         | Destination blocked by prefix   | You requested that phone numbers with a particular prefix be blocked.                    |
+             | 250         | Final status unknown   | The final status of the SMS cannot be determined.|
+             | 251         | Message successfully sent out for delivery, however final confirmation of delivery to handset was not received | This message was successfully delivered to the gateway, but TeleSign cannot confirm delivery to the handset because TeleSign does not receive the final handset DLR in this region. NOTE: There is a high probability that this message was successfully delivered to the handset. |
+             | 286         | Transaction not attempted         | The SMS is blocked from being sent due to the phone type not being one of the following - mobile, prepaid, personal, or pager.             |
+             | 290         | Message in progress    | The message is being sent to the SMS gateway.    |
+             | 291         | Queued by TeleSign     | TeleSign is experiencing an unusually high volume and has queued the SMS message. |
+             | 292         | Queued by gateway      | The SMS gateway has queued the message.          |
+             | 295         | Status delayed         | The status of the SMS is temporarily unavailable.|
+             | 500         | Transaction not attempted       | No SMS request was attempted.                    |
+             | 502         | Campaign error         | This error can be generated if there is a problem with the short code used.                        |
+             | 503         | Carrier rejected - temporary problem    | This error is generated if there is an error on the carrier or operator side that is temporary and the message can be retried.                  |
+             | 504         | Carrier rejected - permanent error    | This error is generated if there is an error on the carrier or operator side that is permanent and the message should not be retried.           |
+             | 505         | Error on gateway - temporary error    | This error is generated if there is an error on  TeleSign's partner side that is considered temporary and the message can be retried.        |
+             | 506         | Error on gateway - permanent error     | This error is generated if there is an error on TeleSign's partner side that is considered permanent and the message should not be retried. |
+             | 507         | Invalid destination address   | There is a problem with the destination address used. Either the format is not valid, or the number is not associated with any carrier, or if MSC is used it does not know about this MSISDN.  |
+             | 508         | Invalid source address | The message requires a source address. Verify that one is provided and correct.                |
+             | 509         | Parameters problem | One or more parameters used in the request is not supported. |
+             | 510         | Message blocked by subscriber action or request     | The end user has blocked receiving SMS with their carrier plan or by request or from the particular short code used.                                 |
+             | 511         | Subscriber low on credit     | The end user exceeded their spending limits and cannot receive SMS.                              |
+             | 512         | Roaming error          | End user cannot receive SMS because their device that receives the messages is roaming.           |
+             | 513         | Mobile number portability error         | SMS failed because ported combinations are unreachable.                                     |
+             | 514         | Subscriber absent      | The operator/carrier is temporarily unable to reach the end user.       |
+             | 515         | Suspected spam         | This message is considered to be spam by carrier or operator.                                     |
+             | 599         | Status not available   | The system is unable to provide status at this time.                                            |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postMessagingResponse'
+        '400':
+          $ref: '#/responses/StandardMSG400ErrorResponse'
+        '401':
+          $ref: '#/responses/StandardMSG401ErrorResponse'
+        '402':
+          $ref: '#/responses/StandardMSG402ErrorResponse'
+        '404':
+          $ref: '#/responses/StandardMSG404ErrorResponse'
+        '429':
+          $ref: '#/responses/StandardMSG429ErrorResponse'
+        '500':
+          $ref: '#/responses/StandardMSG500ErrorResponse'
+        '503':
+          $ref: '#/responses/StandardMSG503ErrorResponse'
+  '/messaging/{reference_id}':
+    get:
+      summary: Used to get the status of an SMS (messaging) transaction.
+      description: |-
+        By passing the reference ID for a transaction in the body of your request, you can receive a response containing details about that transaction. NOTE: If you try this API out using the API Explorer, you will be billed for the transaction as you normally would. 
+
+        All requests submitted for the SMS API: 
+        * The URI is `https://rest-api.telesign.com/v1/messaging`
+        * Authentication - You can authenticate with [basic](/api-reference/authentication#basic) or [digest](/api-reference/authentication#digest) authentication. 
+        * Use UTF-8 encoded unicode characters as inputs for all TeleSign APIs. 
+        * Use Content-Type application/x-www-form-urlencoded in request headers. 
+      security:
+        - UserSecurity: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: reference_id
+          required: true
+          description: A unique identifier you can use to query the Messaging API and find out the status of your transaction.
+          type: string
+      responses:
+        '201':
+          description: |
+            Your request was fulfilled and resulted in a new resource being created. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+             | Status Code | Associated Text String | Description                                      |
+             |-------------|------------------------|--------------------------------------------------|
+             | 200         | Delivered to handset   | The SMS was delivered to the end user's phone. (Final)                                          |
+             | 203         | Delivered to gateway   | The SMS was delivered to the gateway. If the gateway responds with further information (including successful delivery to handset or delivery failure), the status is updated. (Intermediate)                                   |
+             | 207         | Error delivering SMS to handset (reason unknown)    | The SMS could not be delivered to the end user's handset for an unknown reason. (Final)          |
+             | 210         | Temporary phone error  | The SMS could not be delivered to the handset due to a temporary error with the phone. Examples - phone is turned off, not enough memory to store the message. (Final)                             |
+             | 211         | Permanent phone error  | The SMS could not be delivered to the handset due to a permanent error with the phone. For example, the phone is incompatible with SMS, or illegally registered on the network. This can happen when a phone number is blacklisted, or is incorrectly provisioned. (Final)                             |
+             | 220         | Gateway/network cannot route message| The network cannot route the message to the handset. (Final)                                 |
+             | 221         | Message expired before delivery  | The message was queued by the mobile provider and timed out before it could be delivered to the handset. (Final)                             |
+             | 222         | SMS not supported      | SMS is not supported by this phone, carrier, plan, or user.                                   |
+             | 230         | Message blocked by TeleSign      | TeleSign blocks a message if it is being sent to a phone number that is on a global blocklist.    |
+             | 231         | Invalid/unsupported    | The content of the message is not supported.     |
+             | 237         | Message blocked in requested country    | You requested that messages in a specific country be blocked, and the message was being sent to this country.                                    |
+             | 238         | Destination blocked by prefix | You requested that phone numbers with a particular prefix be blocked.                    |
+             | 250         | Final status unknown   | The final status of the SMS cannot be determined.|
+             | 251         | Message successfully sent out for delivery, however final confirmation of delivery to handset was not received | This message was successfully delivered to the gateway, but TeleSign cannot confirm delivery to the handset because TeleSign does not receive the final handset DLR in this region. NOTE: There is a high probability that this message was successfully delivered to the handset. |
+             | 286         | Transaction not attempted       | The SMS is blocked from being sent due to the phone type not being one of the following - mobile, prepaid, personal, or pager.             |
+             | 290         | Message in progress    | The message is being sent to the SMS gateway.    |
+             | 291         | Queued by TeleSign     | TeleSign is experiencing an unusually high volume and has queued the SMS message. | 
+             | 292         | Queued by gateway      | The SMS gateway has queued the message.          |
+             | 295         | Status delayed         | The status of the SMS is temporarily unavailable.|
+             | 500         | Transaction not attempted       | No SMS request was attempted.   |
+             | 502         | Campaign error         | This error can be generated if there is a problem with the short code used.                        |
+             | 503         | Carrier rejected - temporary problem    | This error is generated if there is an error on the carrier or operator side that is temporary and the message can be retried.                  |
+             | 504         | Carrier rejected - permanent error    | This error is generated if there is an error on the carrier or operator side that is permanent and the message should not be retried.           |
+             | 505         | Error on gateway - temporary error     | This error is generated if there is an error on TeleSign's partner side that is considered temporary and the message can be retried.        |
+             | 506         | Error on gateway - permanent error    | This error is generated if there is an error on TeleSign's partner side that is considered permanent and the message should not be retried. |
+             | 507         | Invalid destination address    | There is a problem with the destination address used. Either the format is not valid, or the number is not associated with any carrier, or if MSC is used it does not know about this MSISDN.  |
+             | 508         | Invalid source address | The message requires a source address. Verify that one is provided and correct.                |
+             | 509         | Parameters problem | One or more parameters used in the request is not supported. | 
+             | 510         | Message blocked by subscriber action or request   | The end user has blocked receiving SMS with their carrier plan or by request or from the particular short code used.                                 |
+             | 511         | Subscriber low on credit     | The end user exceeded their spending limits and cannot receive SMS.                              |
+             | 512         | Roaming error          | End user cannot receive SMS because their device that receives the messages is roaming.           |
+             | 513         | Mobile number portability error         | SMS failed because ported combinations are unreachable.                                     |
+             | 514         | Subscriber absent      | The operator/carrier is temporarily unable to reach the end user.       |
+             | 515         | Suspected spam         | This message is considered to be spam by carrier or operator.                                     |
+             | 599         | Status not available   | The system is unable to provide status at this time.                                            |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postMessagingResponse'
+        '400':
+          description: |
+            Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+             | Status Code | Associated Text String |
+             |-------------|------------------------|
+             | 10032       | Message blocked by TeleSign               |
+             | 10033       | Unverified phone_number requested for trial account.               |
+             | 10034       | Call with declared type blocked in country requested              |
+             | 11000       | Invalid value for parameter phone_number |
+             | 11001       | Invalid country code for parameter phone_number           |
+             | 11003       | Invalid value for parameter account_lifecycle_event |
+             | 11004       | Invalid value for parameter callback_url |
+             | 11005       | Invalid value for parameter customer_id  |
+             | 11009       | Invalid value for parameter message      |
+             | 11010       | Invalid value for parameter originating_ip         |
+             | 11011       | Invalid value for parameter reference_id |
+             | 11017       | Invalid value for parameter device_id    |
+             | 12000       | Missing required parameter phone_number |
+             | 12009       | Missing required parameter message      |
+             | 12017       | Missing required parameter message_type |
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/postMessagingResponse'
+        '401':
+          $ref: '#/responses/StandardMSG401ErrorResponse'
+        '402':
+          $ref: '#/responses/StandardMSG402ErrorResponse'
+        '404':
+          $ref: '#/responses/StandardMSG404ErrorResponse'
+        '429':
+          $ref: '#/responses/StandardMSG429ErrorResponse'
+        '500':
+          $ref: '#/responses/StandardMSG500ErrorResponse'
+        '503':
+          $ref: '#/responses/StandardMSG503ErrorResponse'
+definitions:
+  postMessagingResponse:
+    type: object
+    properties:
+      reference_id:
+        type: string
+        description: |
+          A 32-digit hex value used to identify the web service request. The value is unique to each web service request, is randomly generated by TeleSign, and is returned in the response message immediately following the web service request.
+      status:
+        type: object
+        properties:
+          code:
+            type: string
+            description: |
+              This code describes the status of your transaction. You can use this code to programmatically respond. You are returned two types of codes, either status codes or error codes. You can read more about status codes on the *[All Status and Error Codes](/api-reference/codes-languages-and-time-zones/all-status-and-error-codes)* page.
+          description:
+            type: string
+            description: |
+              A text description of the status code.
+          updated_on:
+            type: string
+            description: |
+              This is a timestamp showing when your transaction status was updated last.
+        required:
+          - code
+          - description
+          - updated_on
+responses:
+  StandardMSG400ErrorResponse:
+    description: |-
+      Bad request, the request could not be understood by the server due to malformed syntax. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+       | Status Code | Associated Text String |
+       |-------------|------------------------|
+       | 10032       | Message blocked by TeleSign               |
+       | 10033       | Unverified phone_number requested for trial account.               |
+       | 10034       | Call with declared type blocked in country requested              |
+       | 11000       | Invalid value for parameter phone_number |
+       | 11001       | Invalid country code for parameter phone_number           |
+       | 11003       | Invalid value for parameter account_lifecycle_event |
+       | 11004       | Invalid value for parameter callback_url |
+       | 11005       | Invalid value for parameter customer_id  |
+       | 11009       | Invalid value for parameter message      |
+       | 11010       | Invalid value for parameter originating_ip         |
+       | 11011       | Invalid value for  parameter reference_id |
+       | 11017       | Invalid value for parameter device_id    |
+       | 12000       | Missing required parameter phone_number |
+       | 12009       | Missing required parameter message      |
+       | 12017       | Missing required parameter message_type |
+    schema:
+      type: object
+      items:
+        $ref: '#/definitions/postMessagingResponse'
+  StandardMSG401ErrorResponse:
+    description: |-
+      Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+       | Status Code | Associated Text String |
+       |-------------|------------------------|
+       | 10008       | Invalid signature      |
+       | 10009       | Invalid value for parameter message      |
+       | 10010       | Invalid value for parameter originating_ip         |
+       | 10011       | Invalid value for parameter reference_id |
+       | 10012       | This feature is not enabled for this CustomerID             |
+       | 10013       | Invalid Request. CustomerID Account Not Found              |
+       | 10014       | Invalid source IP address                |
+       | 10015       | Invalid customer ID    |
+    schema:
+      type: object
+      items:
+        $ref: '#/definitions/postMessagingResponse'
+  StandardMSG402ErrorResponse:
+    description: |
+      Payment Required. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+      | Status Code | Associated Text String |
+      |-------------|------------------------|
+      | 10030       | Insufficient funds in prepaid wallet         |
+    schema:
+      type: object
+      items:
+        $ref: '#/definitions/postMessagingResponse'
+  StandardMSG404ErrorResponse:
+    description: |
+      Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+      | Status Code | Associated Text String |
+      |-------------|------------------------|
+      | 10017       | Customer ID / Reference ID not found           |
+      | 10036       | Reference ID expired   |
+    schema:
+      type: object
+      items:
+        $ref: '#/definitions/postMessagingResponse'
+  StandardMSG429ErrorResponse:
+    description: |
+      Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
+
+      | Status Code | Associated Text String |
+      |-------------|------------------------|
+      | 10019       | Rate Limit Exceeded    |
+      | 10020       | Messaging exceeded transaction hard cap. Request denied.        |
+    schema:
+      type: object
+      items:
+        $ref: '#/definitions/postMessagingResponse'
+  StandardMSG500ErrorResponse:
+    description: |
+      Invalid Transaction, transaction not attempted.
+    schema:
+      type: object
+      items:
+        $ref: '#/definitions/postMessagingResponse'
+  StandardMSG503ErrorResponse:
+    description: |
+      Service Unavailable, system unavailable, try again.
+    schema:
+      type: object
+      items:
+        $ref: '#/definitions/postMessagingResponse'
