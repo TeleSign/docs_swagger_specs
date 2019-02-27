@@ -25,8 +25,8 @@ You can sign up to try these products at <a href="https://portal.telesign.com">p
 # APIs in the Enterprise Repository
 Enterprise versions available for use are: 
 * Anonymous SMS API - TeleSign’s Anonymous SMS API allows you to mask phone numbers, safeguarding user identities with anonymized SMS communication experiences between two parties.
-* Get Status API 
-* Phone Numbers API 
+* Get Status API - TeleSign's Get Status API is used with the SMS Verify and Voice Verify APIs. You can retrieve the status of transactions for either API with this. 
+* Phone Numbers API - TeleSign's Phone Numbers API lets you search for and lease phone numbers that are appropriate for your TeleSign projects. You can also query this API to see what phone numbers you have leased, or to cancel a lease. 
 * PhoneID API - TeleSign’s PhoneID API allows you to collect detailed and actionable global phone number and subscriber data intelligence to strengthen authentications, evaluate fraud risks, and enhance the user experience.
 * PhoneID with Add-ons API 
 * SMS API - TeleSign’s SMS API allows you to build communications and account security messaging into web and mobile applications.
