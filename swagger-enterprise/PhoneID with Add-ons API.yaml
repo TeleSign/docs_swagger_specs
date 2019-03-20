@@ -94,6 +94,10 @@ paths:
                     type: object
                     description: |
                       Using this add-on allows you to retrieve information about a subscriber. You can see what kind of contract they have, how long they've had their account, whether they're active, and what kind of account they have. To use this in the API explorer, just set it equal to '{}'.
+                  porting_history:
+                    type: object
+                    description: | 
+                      Using this add-on allows you to find out at what point and where a phone number was ported to. If a phone number is ported in the last 90 days from one carrier to another, the information you get in a response includes the current and previous carrier name, current and previous MCC (mobile country code), current and previous MNC (mobile network code), current and previous phone type, and the date the number was ported.
       responses:
         '200':
           description: |
@@ -127,7 +131,6 @@ paths:
         '401':
           description: |
             Unauthorized, the request requires user authentication. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response. 
-
              | Status Code | Associated Text String | 
              |-------------|------------------------|
              | 10008       | Invalid signature     | 
@@ -145,7 +148,6 @@ paths:
         '402':
           description: |
             Payment Required. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
-
             | Status Code | Associated Text String | 
             |-------------|------------------------|
             | 10030       | Insufficient funds in prepaid wallet         |
@@ -156,7 +158,6 @@ paths:
         '404':
           description: |-
             Not Found, the server has not found anything matching the Request-URI. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
-
             | Status Code | Associated Text String | 
             |-------------|------------------------|
             | 10017       | Customer ID / Reference ID not found           |
@@ -167,7 +168,6 @@ paths:
         '429':
           description: |
             Too Many Requests, the user sent too many requests in a given amount of time. If you want to code against a response, you should retrieve the status or error code and use that rather than the HTTP status response.
-
             | Status Code | Associated Text String | 
             |-------------|------------------------|
             | 10019       | Rate Limit Exceeded    |
@@ -261,23 +261,14 @@ definitions:
                 type: string
                 description: |-
                   A brief description telling you what the code means.
-
                     2800 - Request successfully completed.
-
                    2801 - Invalid Request addons parameter {parameter_name} 
-
                    2802 - number_deactivation add-on temporarily unavailable
-
                      2803 - Phone number out of number_deactivation add-on coverage. 
-
                     2804 - Phone number not applicable in number_deactivation add-on. 
-
                     2805 - No number_deactivation add-on information for phone_number. 
-
                     2806 - number_deactivation add-on is not enabled. 
-
                     2807 - Some parameters submitted in the request are not valid. 
-
                    
       contact_match:
         type: object
@@ -307,21 +298,13 @@ definitions:
                 type: string
                 description: |-
                   A brief description telling you what the code means.
-
                     2800 - Request successfully completed.
-
                    2801 - Invalid Request addons parameter {parameter_name} 
-
                    2802 - number_deactivation add-on temporarily unavailable
-
                      2803 - Phone number out of number_deactivation add-on coverage. 
-
                     2804 - Phone number not applicable in number_deactivation add-on. 
-
                     2805 - No number_deactivation add-on information for phone_number. 
-
                     2806 - number_deactivation add-on is not enabled. 
-
                     2807 - Some parameters submitted in the request are not valid. 
       device_info:
         type: object
@@ -364,24 +347,16 @@ definitions:
                 type: string
                 description: |-
                   A brief description telling you what the code means.
-
                     2800 - Request successfully completed.
-
                    2801 - Invalid Request addons parameter {parameter_name} 
-
                    2802 - number_deactivation add-on temporarily unavailable
-
                      2803 - Phone number out of number_deactivation add-on coverage. 
-
                     2804 - Phone number not applicable in number_deactivation add-on. 
-
                     2805 - No number_deactivation add-on information for phone_number. 
-
                     2806 - number_deactivation add-on is not enabled. 
-
                     2807 - Some parameters submitted in the request are not valid. 
       subscriber_status:
-        type: string
+        type: object
         description: |
           You will only see this if you used the subscriber_status add-on. 
         properties:
@@ -422,23 +397,69 @@ definitions:
                 type: string
                 description: |
                   A brief description of what the error or status code means. 
-                                    A brief description telling you what the code means.
-
                     2800 - Request successfully completed.
-
                    2801 - Invalid Request addons parameter {parameter_name} 
-
                    2802 - number_deactivation add-on temporarily unavailable
-
                      2803 - Phone number out of number_deactivation add-on coverage. 
-
                     2804 - Phone number not applicable in number_deactivation add-on. 
-
                     2805 - No number_deactivation add-on information for phone_number. 
-
                     2806 - number_deactivation add-on is not enabled. 
-
                     2807 - Some parameters submitted in the request are not valid. 
+                    
+      porting_history:
+        type: object
+        description: |
+          You will only see this if you used the porting_history add-on.
+        properties:
+          carrier_current:
+            type: string
+            description: |
+              The name of the current carrier for the phone number you provided.
+          carrier_previous:
+            type: string
+            description: |
+             The name of the carrier before the phone number was ported to the new carrier.
+          mcc_carrier_current: 
+            type: string
+            description: |
+              The mobile country code for the current carrier. This field can include multiple values for MCC.
+          mcc_carrier_previous:
+            type: string
+            description: |
+              The mobile network code for the previous carrier. This field can include multiple values for MNC.
+          phone_type_current:
+            type: string
+            description: |
+              The phone type currently associated with the phone number.
+          phone_type_previous:
+            type: string 
+            description: | 
+              The phone type previousl associated with the phone number.
+          port_date:
+            type: string 
+            description: |
+              The date the phone number was ported to a new carrier.
+          status:
+            type: object
+            description: |
+              An object containing details about the success or failure of your request. 
+            properties:
+              code:
+                type: string
+                description: |
+                  A status or error code describing what happened after your request.
+              description:
+                type: string
+                description: |
+                  A brief description of what the error or status code means.
+                  2800 - Request successfully completed.
+                  2801 - Invalid Request addons parameter {parameter_name} 
+                  2802 - number_deactivation add-on temporarily unavailable
+                  2803 - Phone number out of number_deactivation add-on coverage. 
+                  2804 - Phone number not applicable in number_deactivation add-on. 
+                  2805 - No number_deactivation add-on information for phone_number. 
+                    2806 - number_deactivation add-on is not enabled. 
+                    2807 - Some parameters submitted in the request are not valid.   
       status:
         type: object
         description: |
